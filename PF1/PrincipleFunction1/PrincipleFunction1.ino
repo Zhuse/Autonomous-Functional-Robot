@@ -4,8 +4,9 @@ Servo myservo;  // create servo object to control a servo
 
 /* Member variables */
 float currTemp;
-float distReading;
+float currDist;
 float speedSound; //Speed of sound based on current temp
+float currSpeed;
 int servoPos = 90;    // variable to store the servo position (90 deg is middle position)
 
 /* Constants */
@@ -24,13 +25,45 @@ void setup() {
 }
 
 void loop() {
+
+
+}
+
+/**
+ * Initiate autonomous procedure for principle function 1
+ * Robot moves forward at max speed until it detects an object within 50 cm
+ * Robot gradually slows down and stops before hitting the wall (as close as pos.)
+ * Robot checks left and right using servo and then chooses side with most space and repeats
+ */
+void principleFunction1(){
+  while (getDist() > 50){
+    //Max speed, set currSpeed
+  }
+  while (currSpeed > 0) {
+    //Change speed as a function of distance
+  }
+  myservo.write(0);
+  float leftDist = getDist();
+  myservo.write(180);
+  float rightDist = getDist();
+
+  if (leftDist>rightDist){
+    //Turn left 90 degrees
+  }
+  else{
+    //Turn right 90 degrees
+  }
+}
+
+/**
+ * Returns the distance reading from the HC SR04 in cm
+ * Also modifies member variables: currTemp and speedSound and currDist
+ */
+float getDist(){
   currTemp = getLMTemp(LM35_PIN);
   speedSound = 331.5 + (0.6 * currTemp);
-  distReading = readHCSR04(HC_SR04_TRIG_PIN, HC_SR04_ECHO_PIN);
-
-  Serial.print("Distance: ");
-  Serial.println(distReading);
-
+  currDist = readHCSR04(HC_SR04_TRIG_PIN, HC_SR04_ECHO_PIN);
+  return currDist;
 }
 
 /**

@@ -11,7 +11,8 @@ void setup() {
 }
 
 void loop() {
-  for (int i=0; i<10; i++){
-    analogWrite(MOTOR_POWER_PIN, i*10+10);
+  for (int i=0; i<255; i++){
+    analogWrite(MOTOR_POWER_PIN, i);
+    delay(40);
   }
 }
