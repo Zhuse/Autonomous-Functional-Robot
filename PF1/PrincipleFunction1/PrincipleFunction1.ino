@@ -15,10 +15,10 @@ const int SERVO_PIN = 13;
 const int HC_SR04_TRIG_PIN = 10;
 const int HC_SR04_ECHO_PIN = 9;
 
-const int MOTOR_POWER_PIN1 = 5; //E1 (wheel 1)
-const int MOTOR_POLARITY_PIN1 = 4; //M1 (wheel 1)
+const int MOTOR_POWER_PIN1 = 5; //E1 
+const int MOTOR_POLARITY_PIN1 = 4; //M1 (right wheel) , LOW is forward
 const int MOTOR_POWER_PIN2 = 6; //E1 (wheel 2)
-const int MOTOR_POLARITY_PIN2 = 7; //M1 (wheel 2)
+const int MOTOR_POLARITY_PIN2 = 7; //M1 (left wheel)
 
 void setup() {
   Serial.begin(9600);
@@ -32,17 +32,19 @@ void setup() {
   
   // Set initial rotation speed + direction
   analogWrite(MOTOR_POWER_PIN1, 0);
-  digitalWrite(MOTOR_POLARITY_PIN1, HIGH);
+  digitalWrite(MOTOR_POLARITY_PIN1, LOW); //Controlling direction of both wheels
   analogWrite(MOTOR_POWER_PIN2, 0);
   digitalWrite(MOTOR_POLARITY_PIN2, LOW);
+
+  //digitalWrite(M2, 
 }
 
 void loop() {
-  for (int i=0; i<255; i+=5){
-    //analogWrite(MOTOR_POWER_PIN1, i);
-    //analogWrite(MOTOR_POWER_PIN2, 255-i);
+  for (int i=0; i<125; i+=5){
+    analogWrite(MOTOR_POWER_PIN1, 200);
+    analogWrite(MOTOR_POWER_PIN2, 200); //Controlling speed of both wheel right now
     Serial.println(getLMTemp(LM35_PIN));
-    delay(250);
+    delay(500);
   }
 }
 
