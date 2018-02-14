@@ -1,3 +1,5 @@
+//Code for Hall effect odometer
+
 unsigned long prevInterruptLeft;
 unsigned long prevInterruptRight;
 
@@ -6,6 +8,8 @@ const int rightInteruptPin = 3;
 
 void setup() {
 	pinMode(leftInteruptPin, INPUT_PULLUP);
+	pinMode(rightInteruptPin, INPUT_PULLUP);	
+
 //Triggers the interrupt functions when low to high detected
 	attachInterrupt(digitalPinToInterrupt(leftInteruptPin), checkLeftHE, RISING);
 	attachInterrupt(digitalPinToInterrupt(rightInteruptPin), checkRightHE, RISING);
