@@ -7,18 +7,18 @@ float currTemp;
 float currDist;
 float speedSound; //Speed of sound based on current temp
 float currSpeed;
-int servoPos = 90;    // variable to store the servo position (90 deg is middle position)
+int servoPos = 90; // variable to store the servo position (90 deg is middle position)
 
 /* Constants */
 const int LM35_PIN = A0;
-const int SERVO_PIN = 13;
-const int HC_SR04_TRIG_PIN = 10;
-const int HC_SR04_ECHO_PIN = 9;
+const int SERVO_PIN = A1;
+const int HC_SR04_TRIG_PIN = 12;
+const int HC_SR04_ECHO_PIN = 13;
 
-const int MOTOR_POWER_PIN1 = 5; //E1 
-const int MOTOR_POLARITY_PIN1 = 4; //M1 (right wheel) , LOW is forward
-const int MOTOR_POWER_PIN2 = 6; //E1 (wheel 2)
-const int MOTOR_POLARITY_PIN2 = 7; //M1 (left wheel)
+const int MOTOR_POWER_PIN1 = 5; //E1 (left wheel speed)
+const int MOTOR_POLARITY_PIN1 = 4; //M1 (left wheel) , LOW is forward
+const int MOTOR_POWER_PIN2 = 6; //E1 (right wheel speed)
+const int MOTOR_POLARITY_PIN2 = 7; //M1 (right wheel), HIGH is forward
 
 void setup() {
   Serial.begin(9600);
@@ -30,22 +30,36 @@ void setup() {
   pinMode(MOTOR_POLARITY_PIN1, OUTPUT); //Direction
   pinMode(MOTOR_POLARITY_PIN2, OUTPUT); //Direction
   
-  // Set initial rotation speed + direction
+  // Set initial rotation speed to 0
   analogWrite(MOTOR_POWER_PIN1, 0);
-  digitalWrite(MOTOR_POLARITY_PIN1, LOW); //Controlling direction of both wheels
+  //digitalWrite(MOTOR_POLARITY_PIN1, LOW);
   analogWrite(MOTOR_POWER_PIN2, 0);
-  digitalWrite(MOTOR_POLARITY_PIN2, LOW);
+  //digitalWrite(MOTOR_POLARITY_PIN2, HIGH);
 
-  //digitalWrite(M2, 
+  //Put delay to start? 
 }
 
 void loop() {
-  for (int i=0; i<125; i+=5){
-    analogWrite(MOTOR_POWER_PIN1, 200);
-    analogWrite(MOTOR_POWER_PIN2, 200); //Controlling speed of both wheel right now
+  /*
+  myservo.write(0);
+  delay(2500);
+  myservo.write(180);
+  delay(2500);*/
+
+  principleFunction1();
+  
+  /*
+  for (int i=0; i<200; i+=5){
+    setForwardSpeed(i);
     Serial.println(getLMTemp(LM35_PIN));
-    delay(500);
-  }
+    if (i<100){
+      myservo.write(0);
+    }
+    else{
+      myservo.write(180);
+    }
+    delay(250);
+  }*/
 }
 
 /**
@@ -57,21 +71,73 @@ void loop() {
 void principleFunction1(){
   while (getDist() > 50){
     //Max speed, set currSpeed
+    Serial.print("Dist:");
+    Serial.println(currDist);
+    setForwardSpeed(255);
   }
-  while (currSpeed > 0) {
+  while (getDist() > 15) {
+    Serial.print("Dist:");
+    Serial.println(currDist);
+    
     //Change speed as a function of distance
+    setForwardSpeed(255-getDist()*255/15);
   }
-  myservo.write(0);
+  myservo.write(180); //Check left
+  delay(500);
   float leftDist = getDist();
-  myservo.write(180);
+  myservo.write(0); //Check right
+  delay(500);
   float rightDist = getDist();
+  myservo.write(90); //Reset position
 
   if (leftDist>rightDist){
+    Serial.println("LEFT IS CLEAR");
+    stationaryTurn(1);
     //Turn left 90 degrees
   }
   else{
+    Serial.println("RIGHT IS CLEAR");
+    stationaryTurn(0);
     //Turn right 90 degrees
   }
+}
+
+/**
+ * Turns motors such that both wheels go in forward direction
+ * Changes currspeed to speed that we set forward speed to
+ * Speed should be an int between 0 and 255
+ */
+void setForwardSpeed(int speed){
+  digitalWrite(MOTOR_POLARITY_PIN1, LOW);
+  digitalWrite(MOTOR_POLARITY_PIN2, HIGH);
+  analogWrite(MOTOR_POWER_PIN1, speed);
+  analogWrite(MOTOR_POWER_PIN2, speed);
+  currSpeed = speed;
+}
+
+/**
+ * Turns motors such that the whole robot turns in a direction without moving forward
+ * Changes currspeed to 0
+ * Direction is 1 for left and 0 for right
+ */
+void stationaryTurn(int direction){
+  if (direction == 1){
+    digitalWrite(MOTOR_POLARITY_PIN1, LOW);
+    digitalWrite(MOTOR_POLARITY_PIN2, LOW);
+    analogWrite(MOTOR_POWER_PIN1, 100);
+    analogWrite(MOTOR_POWER_PIN2, 100);
+    delay(5000);
+  }
+  else{
+    digitalWrite(MOTOR_POLARITY_PIN1, LOW);
+    digitalWrite(MOTOR_POLARITY_PIN2, LOW);
+    analogWrite(MOTOR_POWER_PIN1, 100);
+    analogWrite(MOTOR_POWER_PIN2, 100);
+    delay(5000); 
+  }
+  analogWrite(MOTOR_POWER_PIN1, 0);
+  analogWrite(MOTOR_POWER_PIN2, 0);
+  currSpeed = 0;
 }
 
 /**
