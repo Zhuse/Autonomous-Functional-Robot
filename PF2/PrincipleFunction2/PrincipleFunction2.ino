@@ -5,10 +5,8 @@ front of vehnical is pointing up
 * = vehical 
 s = sensor 
  
-         s s
-         
-         s s
-         
+        
+     S1 S2 S3 S4         
          ***
         *****
         *****
@@ -17,10 +15,11 @@ s = sensor
 two cross sensors placed directly infront of two direciton sensors
 
  */
-int directionSensor0Pin = 0;
-int directionSensor1Pin = 1;
-int crossSensor0Pin = 2;
-int crossSensor1Pin = 3;
+const int directionSensor0Pin = 0;
+const int directionSensor1Pin = 1;
+const int crossSensor0Pin = 2;
+const int crossSensor1Pin = 3;
+const int motorPin = 4;
 
 int crossSensors[] = {0,0};
 int directionSensors[] = {0,0};
@@ -69,10 +68,40 @@ void updateDrive() {
 // reduce speed of left motor
 void reduceLeft() {
   
-} 
+}
+
+//increase speed of left motor
+void increaseLeft() {
+  
+}
 
 // reduce speed of right motor
 void reduceRight() {
+  
+}
+
+//increase speed of right motor
+void increaseRight(){
+  
+}
+
+//make a hard right (case when S3 and S4 detect black tape only)
+void hardRight(){
+  
+}
+
+//make a hard left (case when S1 and S2 detect black tape only)
+void hardLeft(){
+  
+}
+
+//make a soft right (case when S3 detects black tape only)
+void softRight(){
+  
+}
+
+//make a soft left (case when S2 detects black tape only)
+void softLeft(){
   
 }
 

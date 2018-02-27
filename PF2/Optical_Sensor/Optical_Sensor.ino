@@ -9,8 +9,8 @@ void setup() {
   Serial.begin(9600);
   pinMode(opticalSensorLED, OUTPUT);
   pinMode(opticalSensorPhotocell, INPUT);
-  
 
+  
 }
 
 void loop() {
@@ -19,12 +19,13 @@ void loop() {
   delay(50);
   noiseAndSignal = analogRead(opticalSensorPhotocell);
 
-  //turn off LED and read from photocell
-  digitalWrite(opticalSensorLED, LOW);
-  delay(50);
-  noise = analogRead(opticalSensorPhotocell);
+//  //turn off LED and read from photocell
+//  digitalWrite(opticalSensorLED, LOW);
+//  delay(50);
+//  noise = analogRead(opticalSensorPhotocell);
 
-  //compute difference
-  opticalSensorReading = noiseAndSignal - noise;
-  Serial.println(opticalSensorReading);
+//  //compute difference
+//  opticalSensorReading = noiseAndSignal - noise;
+//  Serial.println(opticalSensorReading);
+  Serial.println(noiseAndSignal);
 }
