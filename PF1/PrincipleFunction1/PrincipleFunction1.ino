@@ -1,15 +1,14 @@
 #include <Servo.h>
-
-Servo myservo;  // create servo object to control a servo
+#include <LiquidCrystal.h>
 
 /* Member variables */
 float currTemp;
 float currDist;
 float speedSound; //Speed of sound based on current temp
-float currSpeed;
+float currSpeed = 0;
 int servoPos = 90; // variable to store the servo position (90 deg is middle position)
 
-/* Constants */
+/* Constant Pin Assignments */
 const int LM35_PIN = A0;
 const int SERVO_PIN = A1;
 const int HC_SR04_TRIG_PIN = 12;
@@ -20,6 +19,16 @@ const int MOTOR_POLARITY_PIN1 = 4; //M1 (left wheel) , LOW is forward
 const int MOTOR_POWER_PIN2 = 6; //E1 (right wheel speed)
 const int MOTOR_POLARITY_PIN2 = 7; //M1 (right wheel), HIGH is forward
 
+const int LCD_RS = 0;
+const int LCD_EN = 1;
+const int LCD_D4 = 2;
+const int LCD_D5 = 3;
+const int LCD_D6 = 4;
+const int LCD_D7 = 5;
+
+Servo myservo;  // create servo object to control a servo
+LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7); //setup lcd
+
 void setup() {
   Serial.begin(9600);
   pinMode(LM35_PIN, INPUT);
@@ -29,6 +38,9 @@ void setup() {
   myservo.write(servoPos); //set servo position to mid
   pinMode(MOTOR_POLARITY_PIN1, OUTPUT); //Direction
   pinMode(MOTOR_POLARITY_PIN2, OUTPUT); //Direction
+
+  lcd.begin(16, 2); //Setup LCD num of cols and rows
+  updateLCD(1);
   
   // Set initial rotation speed to 0
   analogWrite(MOTOR_POWER_PIN1, 0);
@@ -103,6 +115,21 @@ void principleFunction1(){
 }
 
 /**
+ * Updates the LCD display reading given the current speed of the robot (in the member variable)
+ * and the mode it's in
+ */
+void updateLCD(int mode){
+  lcd.clear();
+  lcd.print("MODE: ");
+  lcd.setCursor(6, 0);
+  lcd.print(mode);
+  lcd.setCursor(0, 1);
+  lcd.print("SPEED: ");
+  lcd.setCursor(7, 1);
+  lcd.print(currSpeed);
+}
+
+/**
  * Turns motors such that both wheels go in forward direction
  * Changes currspeed to speed that we set forward speed to
  * Speed should be an int between 0 and 255
@@ -113,6 +140,7 @@ void setForwardSpeed(int speed){
   analogWrite(MOTOR_POWER_PIN1, speed);
   analogWrite(MOTOR_POWER_PIN2, speed);
   currSpeed = speed;
+  updateLCD(1);
 }
 
 /**
@@ -186,7 +214,7 @@ void initiateHCSR04(int trigPin){
  * Will return -1 if no obstacle is detected
  */
 float receiveHCSR04(int echoPin){
-  unsigned long pulseDuration;
+  unsigned long pulseDuration; 
   unsigned long timeOutDuration;
 
   timeOutDuration = 36000;
