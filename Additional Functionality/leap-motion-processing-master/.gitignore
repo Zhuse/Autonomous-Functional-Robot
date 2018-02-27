@@ -1,0 +1,23 @@
+# System
+.DS_Store
+.svn
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# Project
+src/development/
+lib/
+resources/
+distribution/
+web/
+bin/
+tmp/
+*.psd
+
+# IntelliJ IDEA
+leap-motion-processing.iml
+.idea/
+out/
