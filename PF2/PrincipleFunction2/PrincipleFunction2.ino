@@ -5,8 +5,8 @@ front of vehnical is pointing up
 * = vehical 
 s = sensor 
  
-        
-     S1 S2 S3 S4         
+       s s s s
+         
          ***
         *****
         *****
@@ -15,18 +15,17 @@ s = sensor
 two cross sensors placed directly infront of two direciton sensors
 
  */
-const int directionSensor0Pin = 0;
-const int directionSensor1Pin = 1;
-const int crossSensor0Pin = 2;
-const int crossSensor1Pin = 3;
-const int motorPin = 4;
+int directionSensor0Pin = 0;
+int directionSensor1Pin = 1;
+int directionSensor2Pin = 2;
+int directionSensor3Pin = 3;
 
-int crossSensors[] = {0,0};
-int directionSensors[] = {0,0};
+int directionSensors[] = {0,0,0,0};
 
 int THRESHOLD = 500; // TODO update this value 
 
-// direction[0] is left sensor, direction[1] is right sensor;
+// direction[0] is furthest left sensor
+// direction[1] is furthest right sensor
 
 
 void setup() {
@@ -50,59 +49,47 @@ void principleFunction2() {
 
 
 void updateDrive() {
-  if (crossSensors[0] && crossSensors[1] && ~directionSensors[0] && ~directionSensors[1]) {
+  if (~directionSensors[0] && ~directionSensors[1]) {
     // we are crossing a track, disable sensors for a bit 
     crossing();
     return; 
   } 
 
   if (directionSensors[0]) {
-    // reduce speed of left motor
+    // reduce speed of left motor a lot
+ 		reduceLeft(2);	
   } else if (directionSensors[1]) {
-    // reduce speed of right motor
-  } else {
-    // full speed 
+    // reduce speed of left motor a bit
+ 		reduceLeft(1);	
+  } else if (directionSensors[2]) {
+    // reduce speed of right motor a bit
+  	reduceRight(1);
+	} else if (directionSensors[3]) {
+    // reduce speed of right motor a lot 
+  	reduceRight(2);
+	} else {
+		// full speed
   }
 }
 
-// reduce speed of left motor
-void reduceLeft() {
-  
-}
-
-//increase speed of left motor
-void increaseLeft() {
-  
-}
+// reduce speed of left motor depending on value of spd
+// if spd == 1 reduce a bit, if spd == 2 reduce a lot
+void reduceLeft(int spd) {
+  if (spd == 1) {
+		// reduce speed a bit
+	} else if (spd == 2) {
+		// reduce speed a lot
+	}  
+} 
 
 // reduce speed of right motor
-void reduceRight() {
-  
-}
-
-//increase speed of right motor
-void increaseRight(){
-  
-}
-
-//make a hard right (case when S3 and S4 detect black tape only)
-void hardRight(){
-  
-}
-
-//make a hard left (case when S1 and S2 detect black tape only)
-void hardLeft(){
-  
-}
-
-//make a soft right (case when S3 detects black tape only)
-void softRight(){
-  
-}
-
-//make a soft left (case when S2 detects black tape only)
-void softLeft(){
-  
+// if spd == 1 reduce a bit, if spd == 2 reduce a lot
+void reduceRight(int spd) {
+  if (spd == 1) {
+		// reduce speed a bit
+	} else if (spd == 2) {
+		// reduce speed a lot
+	}  
 }
 
 // set max speed of motors 
@@ -135,18 +122,17 @@ void readSensors() {
     directionSensors[1] = 0;
   }
 
-  if (analogRead(crossSensor0Pin) > THRESHOLD) {
-    crossSensors[0] = 1;
+  if (analogRead(directionSensor2Pin) > THRESHOLD) {
+    directionSensors[2] = 1;
   } else {
-    crossSensors[0] = 0;
+    directionSensors[2] = 0;
   }
 
-  if (analogRead(crossSensor1Pin) > THRESHOLD) {
-    crossSensors[1] = 1;
+  if (analogRead(directionSensor3Pin) > THRESHOLD) {
+    directionSensors[3] = 1;
   } else {
-    crossSensors[1] = 0;
+    directionSensors[3] = 0;
   }
 
   return; 
 }
-
