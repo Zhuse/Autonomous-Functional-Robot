@@ -186,7 +186,7 @@ void initiateHCSR04(int trigPin){
  * Will return -1 if no obstacle is detected
  */
 float receiveHCSR04(int echoPin){
-  unsigned long pulseDuration;
+  unsigned long pulseDuration; 
   unsigned long timeOutDuration;
 
   timeOutDuration = 36000;
