@@ -19,6 +19,15 @@ const int MOTOR_POLARITY_PIN1 = 4; //M1 (left wheel) , LOW is forward
 const int MOTOR_POWER_PIN2 = 6; //E1 (right wheel speed)
 const int MOTOR_POLARITY_PIN2 = 7; //M1 (right wheel), HIGH is forward
 
+//Pins for Hall Effect
+const int RIGHT_HE_PIN = 2;
+const int LEFT_HE_PIN = 3;
+
+double leftLastMillis;
+double rightLastMillis;
+
+double distToCenter = 3;
+
 const int LCD_RS = 0;
 const int LCD_EN = 1;
 const int LCD_D4 = 2;
@@ -38,6 +47,12 @@ void setup() {
   myservo.write(servoPos); //set servo position to mid
   pinMode(MOTOR_POLARITY_PIN1, OUTPUT); //Direction
   pinMode(MOTOR_POLARITY_PIN2, OUTPUT); //Direction
+  
+  pinMode(RIGHT_HE_PIN, INPUT_PULLUP);
+  pinMode(LEFT_HE_PIN, INPUT_PULLUP);
+
+  attachInterrupt(digitalPinToInterrupt(LEFT_HE_PIN), updateLeftHE, RISING);
+  attachInterrupt(digitalPinToInterrupt(RIGHT_HE_PIN), updateRightHE, RISING);
 
   lcd.begin(16, 2); //Setup LCD num of cols and rows
   updateLCD(1);
@@ -227,3 +242,20 @@ float receiveHCSR04(int echoPin){
     return pulseDuration/(20000.0/speedSound); //Return distance otherwise
   }
 }
+
+void updateLeftHE() {
+  double timeChange = millis() - leftLastMillis;
+  leftLastMillis = millis();
+  Serial.println(calcTireSpeed(timeChange));
+}
+
+void updateRightHE() {
+  double timeChange = millis() - rightLastMillis;
+  rightLastMillis = millis();
+  Serial.println(calcTireSpeed(timeChange));
+}
+
+double calcTireSpeed(double time) {
+  return (distToCenter * PI) / (time/1000); 
+}
+

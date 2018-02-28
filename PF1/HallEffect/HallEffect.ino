@@ -3,7 +3,10 @@
 unsigned long prevInterruptLeft;
 unsigned long prevInterruptRight;
 
-const double wheelDiamter = 6.0;
+const double distToCenter = 3;
+int leftRPMCount = 0;
+
+int leftRPM = 0;
 
 const int leftInteruptPin = 2;
 const int rightInteruptPin = 3;
@@ -13,13 +16,17 @@ const int E1Pin = 5;
 const int E2Pin = 6;
 const int M2Pin = 7;
 
+double timeChange;
+
+float lastmillis = millis();
+
 void setup() {
   Serial.begin(9600);
   pinMode(leftInteruptPin, INPUT_PULLUP);
   pinMode(rightInteruptPin, INPUT_PULLUP);  
 
 //Triggers the interrupt functions when low to high detected
-  attachInterrupt(digitalPinToInterrupt(leftInteruptPin), checkLeftHE, RISING);
+  attachInterrupt(digitalPinToInterrupt(leftInteruptPin), updateLeftHE, RISING);
 //  attachInterrupt(digitalPinToInterrupt(rightInteruptPin), checkRightHE, RISING);
 
   analogWrite(E1Pin, 255);
@@ -30,15 +37,26 @@ void setup() {
 }
 
 void loop() {
+  
+
+  
+  
+  
 }
 
 //Changes the left HE previous interrupt time after interrupt is triggered
-void checkLeftHE() {
-  Serial.println("detect");
-  //leftSpeed = calcTireSpeed(prevInterruptLeft);
-  prevInterruptLeft = millis();
-  Serial.println(prevInterruptLeft);
+void updateLeftHE() {
+  
+  timeChange = millis() - lastmillis;
+  lastmillis = millis();
+  Serial.println(calcTireSpeed(timeChange));
+
 }
+
+double calcTireSpeed(double time) {
+  return (distToCenter * PI) / (time/1000); 
+}
+
 
 //Changes the left HE previous interrupt time after interrupt is triggered
 /*void checkRightHE {
