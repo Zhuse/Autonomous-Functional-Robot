@@ -1,8 +1,5 @@
 const int opticalSensorLED = 1; //digital
 const int opticalSensorPhotocell = 1; //analog
-int opticalSensorReading; //high reading means more light detected. This is the difference between noise + LED signal and noise to end up with LED signal
-int noiseAndSignal;
-int noise;
 
 void setup() {
   // put your setup code here, to run once:
@@ -12,10 +9,14 @@ void setup() {
 }
 
 void loop() {
-  Serial.out.println(readSensor(opticalSensorLED, opticalSensorPhotocell));
+  Serial.println(readSensor(opticalSensorLED, opticalSensorPhotocell));
 }
 
 int readSensor(const int sensorLEDPort, const int sensorPhotocellPort){
+  int noiseAndSignal;
+  int noise;
+  int opticalSensorReading; //high reading means more light detected. This is the difference between noise + LED signal and noise to end up with LED signal
+
   //turn on LED here and read the signal from photocell to get noise + signal
   digitalWrite(opticalSensorLED, HIGH);
   delay(50);
