@@ -3,7 +3,10 @@
 unsigned long prevInterruptLeft;
 unsigned long prevInterruptRight;
 
-const double wheelDiamter = 6.0;
+const double distToCenter = 3;
+int leftRPMCount = 0;
+
+int leftRPM = 0;
 
 const int leftInteruptPin = 2;
 const int rightInteruptPin = 3;
@@ -13,39 +16,57 @@ const int E1Pin = 5;
 const int E2Pin = 6;
 const int M2Pin = 7;
 
+double timeChange;
+
+float lastmillis = millis();
+
 void setup() {
-	pinMode(leftInteruptPin, INPUT_PULLUP);
-	pinMode(rightInteruptPin, INPUT_PULLUP);	
+  Serial.begin(9600);
+  pinMode(leftInteruptPin, INPUT_PULLUP);
+  pinMode(rightInteruptPin, INPUT_PULLUP);  
 
 //Triggers the interrupt functions when low to high detected
-	attachInterrupt(digitalPinToInterrupt(leftInteruptPin), checkLeftHE, RISING);
-	attachInterrupt(digitalPinToInterrupt(rightInteruptPin), checkRightHE, RISING);
+  attachInterrupt(digitalPinToInterrupt(leftInteruptPin), updateLeftHE, RISING);
+//  attachInterrupt(digitalPinToInterrupt(rightInteruptPin), checkRightHE, RISING);
 
   analogWrite(E1Pin, 255);
-  analogWrite(E2, 100);
+  analogWrite(E2Pin, 100);
   digitalWrite(M1Pin, LOW);
   digitalWrite(M2Pin, LOW);
   
 }
 
 void loop() {
+  
+
+  
+  
+  
 }
 
 //Changes the left HE previous interrupt time after interrupt is triggered
-void checkLeftHE() {
-	leftSpeed = calcTireSpeed(prevInterruptLeft);
-	prevInterruptLeft = millis();
+void updateLeftHE() {
+  
+  timeChange = millis() - lastmillis;
+  lastmillis = millis();
+  Serial.println(calcTireSpeed(timeChange));
+
 }
 
+double calcTireSpeed(double time) {
+  return (distToCenter * PI) / (time/1000); 
+}
+
+
 //Changes the left HE previous interrupt time after interrupt is triggered
-void checkRightHE {
-	rightSpeed = calcTireSpeed(prevInterruptRight);
-	prevInterruptRight = millis();
+/*void checkRightHE {
+  rightSpeed = calcTireSpeed(prevInterruptRight);
+  prevInterruptRight = millis();
 }
 
 //Given the interrupt time calculate the 
 double calcTireSpeed(long interruptTime) {
-  int tireSpeed = 0.25 * PI * ((wheelDiameter * 1000)/(millis() - interruptTime) 
+  int tireSpeed = 0.25 * PI * ((wheelDiameter * 1000)/(millis() - interruptTime));
 }
 
 void updateLeftSpeed() {
@@ -55,3 +76,4 @@ void updateLeftSpeed() {
 void updateRightSpeed() {
   digitalWrite(M1Pin, LOW);
 }
+*/
