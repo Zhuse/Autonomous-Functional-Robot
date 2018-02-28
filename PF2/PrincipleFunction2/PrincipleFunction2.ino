@@ -19,10 +19,10 @@ two cross sensors placed directly infront of two direciton sensors
 const int maxSpeed = 255;
 
  
-const int opticalSensor0Pin = A0;
-const int opticalSensor1Pin = A1;
-const int opticalSensor2Pin = A2;
-const int opticalSensor3Pin = A3;
+const int opticalSensor0Pin = A2;
+const int opticalSensor1Pin = A3;
+const int opticalSensor2Pin = A4;
+const int opticalSensor3Pin = A5;
 
 const int opticalLED0Pin = 8;
 const int opticalLED1Pin = 9;
@@ -52,12 +52,14 @@ int opticalSensors[] = {0,0,0,0};
 int THRESHOLD = 500; // TODO update this value 
 
 // optical[0] is furthest left sensor
-// optical[1] is furthest right sensor
+// optical[3] is furthest right sensor
 
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
+  
+  /* Optical Sensors */
   pinMode(opticalLED0Pin, OUTPUT);
   pinMode(opticalLED1Pin, OUTPUT);
   pinMode(opticalLED2Pin, OUTPUT);
@@ -69,6 +71,7 @@ void setup() {
   pinMode(opticalSensor3Pin, INPUT);
 
 
+  /* Motor stuff */
   pinMode(leftMotorPolarity, OUTPUT); //Direction
   pinMode(rightMotorPolarity, OUTPUT); //Direction
   
