@@ -3,10 +3,11 @@
 
 /* Member variables */
 float currTemp;
-float currDist;
+float currDist = 400;
 float speedSound; //Speed of sound based on current temp
 float currSpeed = 0;
 int servoPos = 90; // variable to store the servo position (90 deg is middle position)
+unsigned long timer = 0;
 
 /* Constant Pin Assignments */
 const int LM35_PIN = A0;
@@ -18,6 +19,15 @@ const int MOTOR_POWER_PIN1 = 5; //E1 (left wheel speed)
 const int MOTOR_POLARITY_PIN1 = 4; //M1 (left wheel) , LOW is forward
 const int MOTOR_POWER_PIN2 = 6; //E1 (right wheel speed)
 const int MOTOR_POLARITY_PIN2 = 7; //M1 (right wheel), HIGH is forward
+
+//Pins for Hall Effect
+const int RIGHT_HE_PIN = 2;
+const int LEFT_HE_PIN = 3;
+
+double leftLastMillis;
+double rightLastMillis;
+
+double distToCenter = 3;
 
 const int LCD_RS = 0;
 const int LCD_EN = 1;
@@ -38,9 +48,15 @@ void setup() {
   myservo.write(servoPos); //set servo position to mid
   pinMode(MOTOR_POLARITY_PIN1, OUTPUT); //Direction
   pinMode(MOTOR_POLARITY_PIN2, OUTPUT); //Direction
+  
+  pinMode(RIGHT_HE_PIN, INPUT_PULLUP);
+  pinMode(LEFT_HE_PIN, INPUT_PULLUP);
+
+  attachInterrupt(digitalPinToInterrupt(LEFT_HE_PIN), updateLeftHE, RISING);
+  attachInterrupt(digitalPinToInterrupt(RIGHT_HE_PIN), updateRightHE, RISING);
 
   lcd.begin(16, 2); //Setup LCD num of cols and rows
-  updateLCD(1);
+  updateLCD();
   
   // Set initial rotation speed to 0
   analogWrite(MOTOR_POWER_PIN1, 0);
@@ -81,18 +97,23 @@ void loop() {
  * Robot checks left and right using servo and then chooses side with most space and repeats
  */
 void principleFunction1(){
-  while (getDist() > 50){
-    //Max speed, set currSpeed
-    Serial.print("Dist:");
-    Serial.println(currDist);
-    setForwardSpeed(255);
-  }
-  while (getDist() > 15) {
-    Serial.print("Dist:");
-    Serial.println(currDist);
+  while (getDist()>10){
+    if (currDist > 50){
+      //Max speed, set currSpeed
+      //Serial.print("Dist:");
+      //Serial.println(currDist);
+      setForwardSpeed(255);
+    }
+    else if (getDist() > 10) {
+      //Serial.print("Dist:");
+      //Serial.println(currDist);
     
-    //Change speed as a function of distance
-    setForwardSpeed(255-getDist()*255/15);
+      //Change speed as a function of distance
+      int forwardSpeed = 255.0 - currDist*25.5;
+      Serial.print("SPEED: ");
+      Serial.println(forwardSpeed);
+      setForwardSpeed(forwardSpeed);
+    }
   }
   myservo.write(180); //Check left
   delay(500);
@@ -104,12 +125,12 @@ void principleFunction1(){
 
   if (leftDist>rightDist){
     Serial.println("LEFT IS CLEAR");
-    stationaryTurn(1);
+    stationaryLeftTurn();
     //Turn left 90 degrees
   }
   else{
     Serial.println("RIGHT IS CLEAR");
-    stationaryTurn(0);
+    stationaryRightTurn();
     //Turn right 90 degrees
   }
 }
@@ -118,11 +139,15 @@ void principleFunction1(){
  * Updates the LCD display reading given the current speed of the robot (in the member variable)
  * and the mode it's in
  */
-void updateLCD(int mode){
+void updateLCD(){
+  if (millis()-timer < 100)
+    return; //Do not update more than once a second
+    
+  timer = millis();
   lcd.clear();
-  lcd.print("MODE: ");
+  lcd.print("DIST: ");
   lcd.setCursor(6, 0);
-  lcd.print(mode);
+  lcd.print(currDist);
   lcd.setCursor(0, 1);
   lcd.print("SPEED: ");
   lcd.setCursor(7, 1);
@@ -135,37 +160,51 @@ void updateLCD(int mode){
  * Speed should be an int between 0 and 255
  */
 void setForwardSpeed(int speed){
+  if (speed<0){
+    speed = 0;
+  }
   digitalWrite(MOTOR_POLARITY_PIN1, LOW);
   digitalWrite(MOTOR_POLARITY_PIN2, HIGH);
   analogWrite(MOTOR_POWER_PIN1, speed);
   analogWrite(MOTOR_POWER_PIN2, speed);
   currSpeed = speed;
-  updateLCD(1);
+  updateLCD();
 }
 
 /**
- * Turns motors such that the whole robot turns in a direction without moving forward
+ * Turns motors such that the whole robot turns left without moving forward
  * Changes currspeed to 0
- * Direction is 1 for left and 0 for right
  */
-void stationaryTurn(int direction){
-  if (direction == 1){
-    digitalWrite(MOTOR_POLARITY_PIN1, LOW);
-    digitalWrite(MOTOR_POLARITY_PIN2, LOW);
-    analogWrite(MOTOR_POWER_PIN1, 100);
-    analogWrite(MOTOR_POWER_PIN2, 100);
-    delay(5000);
-  }
-  else{
-    digitalWrite(MOTOR_POLARITY_PIN1, LOW);
-    digitalWrite(MOTOR_POLARITY_PIN2, LOW);
-    analogWrite(MOTOR_POWER_PIN1, 100);
-    analogWrite(MOTOR_POWER_PIN2, 100);
-    delay(5000); 
-  }
+void stationaryLeftTurn(){
+  currSpeed = 0;
+  updateLCD();
+  
+  digitalWrite(MOTOR_POLARITY_PIN1, LOW);
+  digitalWrite(MOTOR_POLARITY_PIN2, LOW);
+  analogWrite(MOTOR_POWER_PIN1, 255);
+  analogWrite(MOTOR_POWER_PIN2, 255);
+  delay(5000);
+  
   analogWrite(MOTOR_POWER_PIN1, 0);
   analogWrite(MOTOR_POWER_PIN2, 0);
+}
+
+/**
+ * Turns motors such that the whole robot turns right without moving forward
+ * Changes currspeed to 0
+ */
+void stationaryRightTurn(){
   currSpeed = 0;
+  updateLCD();
+  
+  digitalWrite(MOTOR_POLARITY_PIN1, LOW);
+  digitalWrite(MOTOR_POLARITY_PIN2, LOW);
+  analogWrite(MOTOR_POWER_PIN1, 255);
+  analogWrite(MOTOR_POWER_PIN2, 255);
+  delay(5000); 
+    
+  analogWrite(MOTOR_POWER_PIN1, 0);
+  analogWrite(MOTOR_POWER_PIN2, 0);
 }
 
 /**
@@ -227,3 +266,20 @@ float receiveHCSR04(int echoPin){
     return pulseDuration/(20000.0/speedSound); //Return distance otherwise
   }
 }
+
+void updateLeftHE() {
+  double timeChange = millis() - leftLastMillis;
+  leftLastMillis = millis();
+  Serial.println(calcTireSpeed(timeChange));
+}
+
+void updateRightHE() {
+  double timeChange = millis() - rightLastMillis;
+  rightLastMillis = millis();
+  Serial.println(calcTireSpeed(timeChange));
+}
+
+double calcTireSpeed(double time) {
+  return (distToCenter * PI) / (time/1000); 
+}
+
