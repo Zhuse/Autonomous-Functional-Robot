@@ -1,4 +1,5 @@
   import processing.serial.*; //import serial reading
+  import de.voidplus.leapmotion.*;
  // Twitter twitter; //Twitter object used to send tweets
   int twitterTimer;
   int TWEET_COOLDOWN = 20000; //Setup so we cannot send a tweet more than once every 20 seconds
@@ -29,7 +30,9 @@
   int downUse = 0;
   int leftUse = 0;
   int rightUse = 0;
-  int gear = 0;
+  int gear = 1;
+  
+  LeapMotion leap;
   
   //Object to store a line object's deltaX,deltaY,opacity,angle,distance, and x position values.
   //These objects are used for redrawing past lines.
@@ -82,39 +85,118 @@
     line(width / 3.3, height, width / 3.3 + 400 * cos(-1 * degree), height + 400 * sin(-1 * degree));
     delay(500);
     
-    //Set up the twitter portion
-   // twitter = setupTwitter();
-    twitterTimer = 0;
+    leap = new LeapMotion(this).allowGestures();  // All gestures  
   }
   
-  //Set up the twitter and connect Processing to the twitter account.
- /* Twitter setupTwitter(){
-    String consumerKey = "5PWlw9k7SjURGKJ6VokxpB87k";
-    String consumerSecret = "Fd30rzSpm8b13G6DFJJG4LaadkbBC6LvWIhQ0ppnXymjqOoOgr";
-    String accessToken = "959220849663361027-v7iRkvCrXViItwaRiGNKkvd8ul4aMwW";
-    String accessSecret = "z0pIuDWQLIzOpoVgMMq1dorr6rn4VBcXckKXICML82eva";
-  
-    //Login to the twitter account
-    ConfigurationBuilder cb = new ConfigurationBuilder();
-    cb.setDebugEnabled(true)
-      .setOAuthConsumerKey(consumerKey)
-      .setOAuthConsumerSecret(consumerSecret)
-      .setOAuthAccessToken(accessToken)
-      .setOAuthAccessTokenSecret(accessSecret);
+  void leapOnSwipeGesture(SwipeGesture g, int state){
+  int     id               = g.getId();
+  Finger  finger           = g.getFinger();
+  PVector position         = g.getPosition();
+  PVector positionStart    = g.getStartPosition();
+  PVector direction        = g.getDirection();
+  float   speed            = g.getSpeed();
+  long    duration         = g.getDuration();
+  float   durationSeconds  = g.getDurationInSeconds();
 
-    //Prepare for tweets
-    TwitterFactory tf = new TwitterFactory(cb.build());
-    return tf.getInstance();
+  if(mode == 1){
+  switch(state){
+    case 1: // Start
+      break;
+    case 2: // Update
+      break;
+    case 3: // Stop
+      if(direction.x > 0){
+        if(gear < 4){
+          gear++;
+        }
+      }
+      if(direction.x <= 0){
+        if(gear > 0){
+          gear--;
+        }
+      }
+      break;
   }
- 
- //Send a tweet to the twitter account.
-  void sendTweet(Twitter twitter, String tweet){
-    try {
-      twitter.updateStatus(tweet);
+  }
+  }
+  void leapOnCircleGesture(CircleGesture g, int state){
+  int     id               = g.getId();
+  Finger  finger           = g.getFinger();
+  PVector positionCenter   = g.getCenter();
+  float   radius           = g.getRadius();
+  float   progress        = g.getProgress();
+  long    duration         = g.getDuration();
+  float   durationSeconds  = g.getDurationInSeconds();
+  int     direction        = g.getDirection();
+
+  if(mode == 1){
+  switch(state){
+    case 1: // Start
+      break;
+    case 2: // Update
+      break;
+    case 3: // Stop
+      switch(direction){
+        case 0: // Anticlockwise/Left gesture
+        leftUse = 1;
+        rightUse = 0;
+        break;
+        case 1: // Clockwise/Right gesture
+        rightUse = 1;
+        leftUse = 0;
+        break;
+  }
+      break;
+  }
+
+  
+  }
+}
+
+  // ======================================================
+// 3. Screen Tap Gesture
+
+void leapOnScreenTapGesture(ScreenTapGesture g){
+  int     id               = g.getId();
+  Finger  finger           = g.getFinger();
+  PVector position         = g.getPosition();
+  PVector direction        = g.getDirection();
+  long    duration         = g.getDuration();
+  float   durationSeconds  = g.getDurationInSeconds();
+  
+  if(mode == 1){
+    if(upUse == 1 || downUse == 1){
+      upUse = 0;
+      downUse = 0;
+    } else {
+      upUse = 1;
     }
-    catch (TwitterException te){};
-  }*/
+  }
+}
 
+
+// ======================================================
+// 4. Key Tap Gesture
+
+void leapOnKeyTapGesture(KeyTapGesture g){
+  int     id               = g.getId();
+  Finger  finger           = g.getFinger();
+  PVector position         = g.getPosition();
+  PVector direction        = g.getDirection();
+  long    duration         = g.getDuration();
+  float   durationSeconds  = g.getDurationInSeconds();
+
+  if(mode == 1){
+  if(mode == 1){
+    if(upUse == 1 || downUse == 1){
+      upUse = 0;
+      downUse = 0;
+    } else {
+      upUse = 1;
+    }
+  }
+  }
+}
   //Draw the radar plot
   void drawGrid(){
     String distanceMark = ""; //labels for the distance markings
@@ -137,12 +219,7 @@
     
     //Draw the labels for the distance markings depending on the mode
     for(int i = 8; i > 0; i--){
-      if(mode == 0){
-        distanceMark = 5*i + ""; 
-      }
-      if(mode == 1){
         distanceMark = 50*i + ""; 
-      }
       time++;
       text(distanceMark, width / 3.3 - 3, (8-i) * 50 + height / 2.78);
     }
@@ -272,7 +349,18 @@
       xPos = 1105;
       plot.clear();
     }
-    System.out.println(upUse + " " + downUse + " " + leftUse + " " + rightUse + " " + gear);
+      System.out.println(upUse + " " + downUse + " " + leftUse + " " + rightUse + " " + gear);
+      if(mode == 1){
+       if (leap.hasImages()) {
+      for (Image camera : leap.getImages()) {
+        if (camera.isLeft()) {
+        // Left camera
+           image(camera, 1000, 200);
+        } else {
+      }
+    }
+       }
+  }
     delay(1);
   }
   
@@ -291,18 +379,9 @@
         direction = 1;
         
         //Change the scale to 0 - 400 cm
-      } else if (keyCode == UP){
-        mode = 1;
-        plot.clear();
-        xPos = 1105;
-        
-        //Change the scale to 0 - 40cm
-      } else if (keyCode == DOWN){
-        mode = 0;
-        plot.clear();
-        xPos = 1105;
-      }
+      } 
     } else{
+      if(mode == 0){
       if(key == 'w'){
         upUse = 1;
         if(downUse == 1){
@@ -338,6 +417,13 @@
       }
       if(key == '4'){
         gear = 4;
+      }
+      }
+      if(key == '5'){
+        mode = 0;
+      }
+      if(key == '6'){
+        mode = 1;
       }
     }
     
@@ -430,6 +516,7 @@
     text("Speed of Sound(m/s): " + soundSpeed, width * 0.015, height * 0.15);
     text("Current Distance(cm): " + distance, width * 0.015, height * 0.2);
     noFill();
+    if(mode == 0){
     if(upUse == 1){
       image(upU, 1200,150,150,150);
     } else {
@@ -450,13 +537,18 @@
     } else {
       image(left, 1000,300,150,150);
     }
+    } else {
+      textSize(20);
+      fill(255, 255, 255);
+      text("Gesture Driving Enabled", width * 0.67, height * 0.11);
+    }
   }
   
   //Draw the title
   void title(){
-    textSize(20); 
+    textSize(26); 
     fill(255, 255, 255);
-    text("Sensor Plot (5B)", width * 0.4, height * 0.04);
+    text("Remote Controller", width * 0.4, height * 0.08);
   }
   
   //Draw the x-axis
