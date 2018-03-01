@@ -8,7 +8,7 @@
  
         tt
         tt 
-      s ss s
+        ss 
         tt
        **** 
       ******
@@ -23,14 +23,8 @@ const int maxSpeed = 255;
 
 const int opticalSensor0Pin = A2;
 const int opticalSensor1Pin = A3;
-const int opticalSensor2Pin = A4;
-const int opticalSensor3Pin = A5;
-
-const int opticalLED0Pin = 8;
-const int opticalLED1Pin = 9;
-const int opticalLED2Pin = 10;
-const int opticalLED3Pin = 11;
-
+//const int opticalSensor2Pin = A4;
+//const int opticalSensor3Pin = A5;
 
 
 
@@ -61,16 +55,11 @@ void setup() {
 	// put your setup code here, to run once:
 	Serial.begin(9600);
 
-	/* Optical Sensors */
-	pinMode(opticalLED0Pin, OUTPUT);
-	pinMode(opticalLED1Pin, OUTPUT);
-	pinMode(opticalLED2Pin, OUTPUT);
-	pinMode(opticalLED3Pin, OUTPUT);
-
+	
 	pinMode(opticalSensor0Pin, INPUT);
 	pinMode(opticalSensor1Pin, INPUT);
-	pinMode(opticalSensor2Pin, INPUT);
-	pinMode(opticalSensor3Pin, INPUT);
+//	pinMode(opticalSensor2Pin, INPUT);
+//	pinMode(opticalSensor3Pin, INPUT);
 
 
 	/* Motor stuff */
@@ -103,21 +92,30 @@ void principleFunction2() {
 
 void updateDrive() {
 	
-	if (!opticalSensors[1] && !opticalSensors[2]) {
+	if (!opticalSensors[0] && !opticalSensors[1]) {
 		fullSpeed();
 		return; 
-	} 
+	} else if (!opticalSensors[0] && opticalSensors[1]) {
+    // off to the right
+    reduceLeft(1);
+	} else if (opticalSensors[0] && !opticalSensors[1]) {
+    reduceRight(1);
+	} else if (opticalSensors[0] && opticalSensors[1]) {
+    stopSpeed();
+	}
+
+ /*
   if (!opticalSensors[0] && opticalSensors[1] && opticalSensors[2] && !opticalSensors[3]) {
     stopSpeed();    
   }
 
 
-  if (opticalSensors[2]]) {
+  if (opticalSensors[2]) {
     // we're going off to the right
     if (!opticalSensors[0]) {
       reduceLeft(2);
     } else {
-      reduceleft(1);      
+      reduceLeft(1);      
     }
   } else if (opticalSensors[1]) {
     // we're going off to the left
@@ -127,12 +125,12 @@ void updateDrive() {
       reduceRight(1);
     }
   }
-
+*/
 }
 
 // reduce speed of left motor depending on value of spd
 // if spd == 1 reduce a bit, if spd == 2 reduce a lot
-void reduceleft(int spd) {
+void reduceLeft(int spd) {
 	if (spd == 1) {
 		analogWrite(leftMotorPower, maxSpeed - 20);
 	} else if (spd == 2) {
@@ -142,7 +140,7 @@ void reduceleft(int spd) {
 
 // reduce speed of right motor
 // if spd == 1 reduce a bit, if spd == 2 reduce a lot
-void reduceright(int spd) {
+void reduceRight(int spd) {
 	if (spd == 1) {
 		analogWrite(rightMotorPower, maxSpeed - 20);
 	} else if (spd == 2) {
@@ -174,10 +172,6 @@ void crossing() {
 
 
 
-
-
-
-
 // reads the 4 sensors and updates sensors array 
 void readSensors() { 
 
@@ -192,7 +186,7 @@ void readSensors() {
 	} else {
 		opticalSensors[1] = 0;
 	}
-
+/*
 	if (analogRead(opticalSensor2Pin) > THRESHOLD) {
 		opticalSensors[2] = 1;
 	} else {
@@ -204,6 +198,6 @@ void readSensors() {
 	} else {
 		opticalSensors[3] = 0;
 	}
-
+*/
 	return; 
 }
