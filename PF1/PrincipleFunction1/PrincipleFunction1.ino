@@ -28,6 +28,8 @@ double leftLastMillis;
 double rightLastMillis;
 
 double distToCenter = 0.031;
+volatile byte left_half_revolutions = 0;
+volatile byte right_half_revolutions = 0;
 
 const int LCD_RS = 0;
 const int LCD_EN = 1;
@@ -268,17 +270,25 @@ float receiveHCSR04(int echoPin){
 }
 
 void updateLeftHE() {
-  double timeChange = millis() - leftLastMillis;
-  leftLastMillis = millis();
-  String outputMessage = "Left Tire speed is" + String(calcTireSpeed(timeChange));
-    Serial.println(outputMessage);
+  left_half_revolutions++;
+  if (left_half_revolutions >= 20) {
+    double timeChange = millis() - leftLastMillis;
+    leftLastMillis = millis();
+    String outputMessage = "Left Tire speed is " + String(calcTireSpeed(timeChange)*left_half_revolutions) + " m/s";
+    left_half_revolutions = 0;
+      Serial.println(outputMessage);
+  }
 }
 
 void updateRightHE() {
-  double timeChange = millis() - rightLastMillis;
-  rightLastMillis = millis();
-  String outputMessage = "Right Tire speed is" + String(calcTireSpeed(timeChange));
-  Serial.println(outputMessage);
+  right_half_revolutions++;
+  if (right_half_revolutions >= 20) {
+    double timeChange = millis() - rightLastMillis;
+    rightLastMillis = millis();
+    String outputMessage = "Right Tire speed is " + String(calcTireSpeed(timeChange)*right_half_revolutions) + "  m/s";
+    right_half_revolutions = 0;
+    Serial.println(outputMessage);
+  }
 }
 
 double calcTireSpeed(double time) {
