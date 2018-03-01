@@ -6,6 +6,8 @@ float currTemp;
 float currDist = 400;
 float speedSound; //Speed of sound based on current temp
 float currSpeed = 0;
+float leftTireSpeed = 0;
+float rightTireSpeed = 0;
 int servoPos = 90; // variable to store the servo position (90 deg is middle position)
 unsigned long timer = 0;
 
@@ -27,7 +29,7 @@ const int LEFT_HE_PIN = 3;
 double leftLastMillis;
 double rightLastMillis;
 
-double distToCenter = 0.031;
+double distToCenter = 3;
 
 const int LCD_RS = 0;
 const int LCD_EN = 1;
@@ -104,7 +106,7 @@ void principleFunction1(){
       //Serial.println(currDist);
       setForwardSpeed(255);
     }
-    else if (getDist() > 10) {
+    else if (currDist > 10) {
       //Serial.print("Dist:");
       //Serial.println(currDist);
     
@@ -168,7 +170,7 @@ void setForwardSpeed(int speed){
   analogWrite(MOTOR_POWER_PIN1, speed);
   analogWrite(MOTOR_POWER_PIN2, speed);
   currSpeed = speed;
-  updateLCD();
+  //updateLCD();
 }
 
 /**
@@ -177,12 +179,12 @@ void setForwardSpeed(int speed){
  */
 void stationaryLeftTurn(){
   currSpeed = 0;
-  updateLCD();
+  //updateLCD();
   
   digitalWrite(MOTOR_POLARITY_PIN1, LOW);
   digitalWrite(MOTOR_POLARITY_PIN2, LOW);
-  analogWrite(MOTOR_POWER_PIN1, 255);
-  analogWrite(MOTOR_POWER_PIN2, 255);
+  analogWrite(MOTOR_POWER_PIN1, 255); //Left wheel
+  analogWrite(MOTOR_POWER_PIN2, 255); //Right wheel
   delay(5000);
   
   analogWrite(MOTOR_POWER_PIN1, 0);
@@ -195,7 +197,7 @@ void stationaryLeftTurn(){
  */
 void stationaryRightTurn(){
   currSpeed = 0;
-  updateLCD();
+  //updateLCD();
   
   digitalWrite(MOTOR_POLARITY_PIN1, LOW);
   digitalWrite(MOTOR_POLARITY_PIN2, LOW);
@@ -270,15 +272,15 @@ float receiveHCSR04(int echoPin){
 void updateLeftHE() {
   double timeChange = millis() - leftLastMillis;
   leftLastMillis = millis();
-  String outputMessage = "Left Tire speed is" + String(calcTireSpeed(timeChange));
-    Serial.println(outputMessage);
+  Serial.println(calcTireSpeed(timeChange));
+  leftTireSpeed = calcTireSpeed(timeChange);
 }
 
 void updateRightHE() {
   double timeChange = millis() - rightLastMillis;
   rightLastMillis = millis();
-  String outputMessage = "Right Tire speed is" + String(calcTireSpeed(timeChange));
-  Serial.println(outputMessage);
+  Serial.println(calcTireSpeed(timeChange));
+  rightTireSpeed = calcTireSpeed(timeChange);
 }
 
 double calcTireSpeed(double time) {
