@@ -1,8 +1,5 @@
   import processing.serial.*; //import serial reading
   import de.voidplus.leapmotion.*;
- // Twitter twitter; //Twitter object used to send tweets
-  int twitterTimer;
-  int TWEET_COOLDOWN = 20000; //Setup so we cannot send a tweet more than once every 20 seconds
 
   //Serial myPort;        // The serial port
   float distance = 0;  //current distance reading.
@@ -25,6 +22,7 @@
   PImage downU;
   PImage leftU;
   PImage rightU;
+  PImage background;
   
   int upUse = 0;
   int downUse = 0;
@@ -65,6 +63,7 @@
     downU = loadImage("useDown.png");
     leftU = loadImage("useLeft.png");
     rightU = loadImage("use.png");
+    background = loadImage("background.jpg");
     
     // Open the Serial port.
     //myPort = new Serial(this, Serial.list()[0], 9600);
@@ -76,7 +75,7 @@
       lines.add(l);
     }
     // set initial background and graph plots:
-    background(0);
+    image(background, 0, 0, width, height);
     drawGrid();
     
     strokeWeight(3);
@@ -89,14 +88,7 @@
   }
   
   void leapOnSwipeGesture(SwipeGesture g, int state){
-  int     id               = g.getId();
-  Finger  finger           = g.getFinger();
-  PVector position         = g.getPosition();
-  PVector positionStart    = g.getStartPosition();
   PVector direction        = g.getDirection();
-  float   speed            = g.getSpeed();
-  long    duration         = g.getDuration();
-  float   durationSeconds  = g.getDurationInSeconds();
 
   if(mode == 1){
   switch(state){
@@ -120,13 +112,6 @@
   }
   }
   void leapOnCircleGesture(CircleGesture g, int state){
-  int     id               = g.getId();
-  Finger  finger           = g.getFinger();
-  PVector positionCenter   = g.getCenter();
-  float   radius           = g.getRadius();
-  float   progress        = g.getProgress();
-  long    duration         = g.getDuration();
-  float   durationSeconds  = g.getDurationInSeconds();
   int     direction        = g.getDirection();
 
   if(mode == 1){
@@ -157,12 +142,6 @@
 // 3. Screen Tap Gesture
 
 void leapOnScreenTapGesture(ScreenTapGesture g){
-  int     id               = g.getId();
-  Finger  finger           = g.getFinger();
-  PVector position         = g.getPosition();
-  PVector direction        = g.getDirection();
-  long    duration         = g.getDuration();
-  float   durationSeconds  = g.getDurationInSeconds();
   
   if(mode == 1){
     if(upUse == 1 || downUse == 1){
@@ -179,14 +158,6 @@ void leapOnScreenTapGesture(ScreenTapGesture g){
 // 4. Key Tap Gesture
 
 void leapOnKeyTapGesture(KeyTapGesture g){
-  int     id               = g.getId();
-  Finger  finger           = g.getFinger();
-  PVector position         = g.getPosition();
-  PVector direction        = g.getDirection();
-  long    duration         = g.getDuration();
-  float   durationSeconds  = g.getDurationInSeconds();
-
-  if(mode == 1){
   if(mode == 1){
     if(upUse == 1 || downUse == 1){
       upUse = 0;
@@ -194,7 +165,6 @@ void leapOnKeyTapGesture(KeyTapGesture g){
     } else {
       upUse = 1;
     }
-  }
   }
 }
   //Draw the radar plot
@@ -257,7 +227,7 @@ void leapOnKeyTapGesture(KeyTapGesture g){
     
     //If a button is pressed, rotate the "zone" and redraw the canvas with previous lines
     if(direction != 2){
-      background(0);
+      image(background, 0, 0, width, height);
       drawGrid();
       strokeWeight(3);
       stroke(255,0,0,255);
@@ -300,7 +270,7 @@ void leapOnKeyTapGesture(KeyTapGesture g){
       
        //If no button is pressed, do not rotate the "zone" and continue redrawing the canvas
     } else if (direction == 2){
-      background(0);
+      image(background, 0, 0, width, height);
       drawGrid();
       title();
       xAxis();
@@ -421,9 +391,17 @@ void leapOnKeyTapGesture(KeyTapGesture g){
       }
       if(key == '5'){
         mode = 0;
+        upUse = 0;
+        downUse = 0;
+        leftUse = 0;
+        rightUse = 0;
       }
       if(key == '6'){
         mode = 1;
+        upUse = 0;
+        downUse = 0;
+        leftUse = 0;
+        rightUse = 0;
       }
     }
     
@@ -473,13 +451,6 @@ void leapOnKeyTapGesture(KeyTapGesture g){
       distance = values[0];
       temp = values[1];
       soundSpeed = values[2];
-      
-      //Send a tweet if the measured distance is less that 5 cm.
-      if (distance < 5 && millis()-twitterTimer>=TWEET_COOLDOWN) {
-        String tweetMsg = "WARNING: CLOSE OBJECT (Distance: " + distance + " cm)";
-      //  sendTweet(twitter, tweetMsg);
-        twitterTimer = millis(); //Restart timer
-      }
       
       //Change the mapping scale depending on the mode.
       if(mode == 0){
