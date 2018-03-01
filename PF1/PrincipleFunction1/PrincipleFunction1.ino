@@ -6,6 +6,8 @@ float currTemp;
 float currDist = 400;
 float speedSound; //Speed of sound based on current temp
 float currSpeed = 0;
+float leftTireSpeed = 0;
+float rightTireSpeed = 0;
 int servoPos = 90; // variable to store the servo position (90 deg is middle position)
 unsigned long timer = 0;
 
@@ -106,7 +108,7 @@ void principleFunction1(){
       //Serial.println(currDist);
       setForwardSpeed(255);
     }
-    else if (getDist() > 10) {
+    else if (currDist > 10) {
       //Serial.print("Dist:");
       //Serial.println(currDist);
     
@@ -170,7 +172,7 @@ void setForwardSpeed(int speed){
   analogWrite(MOTOR_POWER_PIN1, speed);
   analogWrite(MOTOR_POWER_PIN2, speed);
   currSpeed = speed;
-  updateLCD();
+  //updateLCD();
 }
 
 /**
@@ -179,12 +181,12 @@ void setForwardSpeed(int speed){
  */
 void stationaryLeftTurn(){
   currSpeed = 0;
-  updateLCD();
+  //updateLCD();
   
   digitalWrite(MOTOR_POLARITY_PIN1, LOW);
   digitalWrite(MOTOR_POLARITY_PIN2, LOW);
-  analogWrite(MOTOR_POWER_PIN1, 255);
-  analogWrite(MOTOR_POWER_PIN2, 255);
+  analogWrite(MOTOR_POWER_PIN1, 255); //Left wheel
+  analogWrite(MOTOR_POWER_PIN2, 255); //Right wheel
   delay(5000);
   
   analogWrite(MOTOR_POWER_PIN1, 0);
@@ -197,7 +199,7 @@ void stationaryLeftTurn(){
  */
 void stationaryRightTurn(){
   currSpeed = 0;
-  updateLCD();
+  //updateLCD();
   
   digitalWrite(MOTOR_POLARITY_PIN1, LOW);
   digitalWrite(MOTOR_POLARITY_PIN2, LOW);
