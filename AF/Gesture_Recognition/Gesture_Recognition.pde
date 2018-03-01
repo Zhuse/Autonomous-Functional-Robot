@@ -1,4 +1,5 @@
 import de.voidplus.leapmotion.*;
+import processing.serial.*;
 LeapMotion leap;
 
 /*
@@ -18,6 +19,9 @@ c = cross sensor
 two cross sensors placed in middle
 */
 
+//TODO IMPORTANT: SERIAL MONITOR DATA ARRIVES IN THIS ORDER:
+
+
 //TODO update port values
 final int MOTOR_PORT = 1;
 final int S1_LED_PORT = 2;
@@ -35,6 +39,13 @@ void setup(){
   size(800, 500);
   background(255);
   leap = new LeapMotion(this).allowGestures();  //Let leap motion detect all gestures
+  // The serial port:
+  Serial serial;       
+  // List all the available serial ports:
+  printArray(Serial.list());
+  // Open the port you are using at the rate you want:
+  serial = new Serial(this, Serial.list()[0], 9600);
+  
 }
 
 void draw(){
@@ -72,30 +83,10 @@ void leapOnCircleGesture(CircleGesture g, int state){
 }
 
 boolean tapeDetected(final int sensorLEDPort, final int sensorPhotocellPort){
-    //read from sensor port
-    if(readSensor(sensorLEDPort, sensorPhotocellPort) > LIGHT_THRESHOLD){
+    //get sensor port data from serial
+    if(serial. > LIGHT_THRESHOLD){
         //then no tape detected
         return false;
     }
     return true;
-}
-
-int readSensor(final int sensorLEDPort, final int sensorPhotocellPort){
-  int noiseAndSignal;
-  int noise;
-  int opticalSensorReading;
-  
-  //turn on LED here and read the signal from photocell to get noise + signal
-  digitalWrite(sensorLEDPort, HIGH);
-  delay(50);
-  noiseAndSignal = analogRead(sensorPhotocellPort);
-
-  //turn off LED and read from photocell
-  digitalWrite(sensorLEDPort, LOW);
-  delay(50);
-  noise = analogRead(sensorPhotocellPort);
-
-  //compute difference
-  opticalSensorReading = noiseAndSignal - noise;
-  return opticalSensorReading;
 }
