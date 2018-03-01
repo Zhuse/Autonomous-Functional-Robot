@@ -27,7 +27,7 @@ const int LEFT_HE_PIN = 3;
 double leftLastMillis;
 double rightLastMillis;
 
-double distToCenter = 3;
+double distToCenter = 0.031;
 
 const int LCD_RS = 0;
 const int LCD_EN = 1;
@@ -270,13 +270,15 @@ float receiveHCSR04(int echoPin){
 void updateLeftHE() {
   double timeChange = millis() - leftLastMillis;
   leftLastMillis = millis();
-  Serial.println(calcTireSpeed(timeChange));
+  String outputMessage = "Left Tire speed is" + String(calcTireSpeed(timeChange));
+    Serial.println(outputMessage);
 }
 
 void updateRightHE() {
   double timeChange = millis() - rightLastMillis;
   rightLastMillis = millis();
-  Serial.println(calcTireSpeed(timeChange));
+  String outputMessage = "Right Tire speed is" + String(calcTireSpeed(timeChange));
+  Serial.println(outputMessage);
 }
 
 double calcTireSpeed(double time) {
