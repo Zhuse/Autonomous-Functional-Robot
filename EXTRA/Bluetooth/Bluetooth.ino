@@ -18,6 +18,7 @@ void setup()
 
 void loop()
 {
+  digitalWrite(13, LOW);
   while(Serial.available())
   {//while there is data available on the serial monitor
     message+=char(Serial.read());//store string from serial command
@@ -26,9 +27,9 @@ void loop()
   {
     if(message!="")
     {//if data is available
-      Serial.println(message); //show the data
+      digitalWrite(13, HIGH);//show the data
       message=""; //clear the data
     }
   }
-  delay(5000); //delay
+  delay(500); //delay
 }

@@ -1,7 +1,7 @@
-  import processing.serial.*; //import serial reading
+  //import processing.serial.*; //import serial reading
   import de.voidplus.leapmotion.*;
 
-  //Serial myPort;        // The serial port
+ // Serial myPort;        // The serial port
   float distance = 0;  //current distance reading.
   float temp = 0;      //current temp reading.
   float soundSpeed = 0; //current sound speed.
@@ -23,6 +23,9 @@
   PImage leftU;
   PImage rightU;
   PImage background;
+  
+  PFont futura;
+  PFont xeno;
   
   int upUse = 0;
   int downUse = 0;
@@ -55,18 +58,17 @@
   void setup () {
     // set the window size:
     size(1800, 600);
-    up = loadImage("unusedUp.png");
-    down = loadImage("unusedDown.png");
-    left = loadImage("unusedLeft.png");
-    right = loadImage("unused.png");
-    upU = loadImage("useUp.png");
-    downU = loadImage("useDown.png");
-    leftU = loadImage("useLeft.png");
-    rightU = loadImage("use.png");
+    up = loadImage("arrowUp.png");
+    down = loadImage("arrowDown.png");
+    left = loadImage("arrowLeft.png");
+    right = loadImage("arrowRight.png");
     background = loadImage("background.jpg");
     
+    futura = createFont("Futura Light Regular.otf", 32);
+    xeno = createFont("Xenotron.ttf", 32);
+    
     // Open the Serial port.
-    //myPort = new Serial(this, Serial.list()[0], 9600);
+   // myPort = new Serial(this, "COM5", 9600);  //Use COM5
 
     // don't generate a serialEvent() unless you get a newline character:
     //myPort.bufferUntil('\n');
@@ -85,6 +87,7 @@
     delay(500);
     
     leap = new LeapMotion(this).allowGestures();  // All gestures  
+    textFont(futura);
   }
   
   void leapOnSwipeGesture(SwipeGesture g, int state){
@@ -241,7 +244,7 @@ void leapOnKeyTapGesture(KeyTapGesture g){
         counter = 0;
         direction = 2;
       }
-      
+      title();
       //Redraw previous lines with reduced opacity
       lines.get(counter).distance = distance;
       lines.get(counter).x = distance * cos(-1 * degree) + width / 3.3;
@@ -320,6 +323,9 @@ void leapOnKeyTapGesture(KeyTapGesture g){
       plot.clear();
     }
       System.out.println(upUse + " " + downUse + " " + leftUse + " " + rightUse + " " + gear);
+      if(upUse == 1){
+        //myPort.write("up");
+      }
       if(mode == 1){
        if (leap.hasImages()) {
       for (Image camera : leap.getImages()) {
@@ -439,7 +445,7 @@ void leapOnKeyTapGesture(KeyTapGesture g){
   
   
   //Parse the data coming in from the serial port.
-  void serialEvent (Serial myPort) {
+  /*void serialEvent (Serial myPort) {
     // get the ASCII string:
     try {
     String inString = myPort.readStringUntil('\n'); //Read the values from the sensors, which are split with a space
@@ -463,7 +469,7 @@ void leapOnKeyTapGesture(KeyTapGesture g){
     //Catch any non-string inputs from the Arduino.
     } catch (Exception e){
     }
-  }
+  }*/
   
   //Draw a green circle for the radar plot.
   void radarLine(int w, int h, int radius, int thickness){
@@ -489,29 +495,30 @@ void leapOnKeyTapGesture(KeyTapGesture g){
     noFill();
     if(mode == 0){
     if(upUse == 1){
-      image(upU, 1200,150,150,150);
+      image(up, 1260,150,130,130);
     } else {
-      image(up, 1200,150,150,150);
+      image(up, 1250,140,150,150);
     }
     if(downUse == 1){
-      image(downU, 1200,450,150,150);
+      image(down, 1260,430,130,130);
     } else {
-      image(down, 1200,450,150,150);
+      image(down, 1250,420,150,150);
     }
     if(rightUse == 1){
-      image(rightU, 1400,300,150,150);
+      image(right, 1460,290,130,130);
     } else {
-      image(right, 1400,300,150,150);
+      image(right, 1450,280,150,150);
     }
     if(leftUse == 1){
-      image(leftU, 1000,300,150,150);
+      image(left, 1060,290,130,130);
     } else {
-      image(left, 1000,300,150,150);
+      image(left, 1050,280,150,150);
     }
     } else {
       textSize(20);
       fill(255, 255, 255);
-      text("Gesture Driving Enabled", width * 0.67, height * 0.11);
+      
+      text("GESTURE DRIVING ENABLED", width * 0.67, height * 0.16);
     }
   }
   
@@ -519,7 +526,9 @@ void leapOnKeyTapGesture(KeyTapGesture g){
   void title(){
     textSize(26); 
     fill(255, 255, 255);
-    text("Remote Controller", width * 0.4, height * 0.08);
+    textFont(xeno);
+    text("REMOTE CONTROLLER", width * 0.4, height * 0.08);
+    textFont(futura);
   }
   
   //Draw the x-axis
