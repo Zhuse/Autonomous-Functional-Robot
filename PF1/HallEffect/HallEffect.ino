@@ -24,15 +24,16 @@ void setup() {
   Serial.begin(9600);
   pinMode(leftInteruptPin, INPUT_PULLUP);
   pinMode(rightInteruptPin, INPUT_PULLUP);  
-
+ // digitalWrite (leftInteruptPin, HIGH);
+//digitalWrite (rightInteruptPin, HIGH);
 //Triggers the interrupt functions when low to high detected
   attachInterrupt(digitalPinToInterrupt(leftInteruptPin), updateLeftHE, RISING);
-//  attachInterrupt(digitalPinToInterrupt(rightInteruptPin), checkRightHE, RISING);
+  attachInterrupt(digitalPinToInterrupt(rightInteruptPin), updateRightHE, RISING);
 
-  analogWrite(E1Pin, 255);
-  analogWrite(E2Pin, 100);
-  digitalWrite(M1Pin, LOW);
-  digitalWrite(M2Pin, LOW);
+  //analogWrite(E1Pin, 255);
+  //janalogWrite(E2Pin, 100);
+  //digitalWrite(M1Pin, LOW);
+  //digitalWrite(M2Pin, LOW);
   
 }
 
@@ -49,8 +50,16 @@ void updateLeftHE() {
   
   timeChange = millis() - lastmillis;
   lastmillis = millis();
-  Serial.println(calcTireSpeed(timeChange));
+  String tireSpeed = String(calcTireSpeed(timeChange));
+  Serial.println(timeChange);
 
+}
+
+void updateRightHE() {
+   timeChange = millis() - lastmillis;
+  lastmillis = millis();
+  String tireSpeed = String(calcTireSpeed(timeChange));
+  Serial.println(timeChange);
 }
 
 double calcTireSpeed(double time) {
