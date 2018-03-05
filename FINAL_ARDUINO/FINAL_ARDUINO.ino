@@ -93,33 +93,29 @@ void setup() {
          || digitalRead(DIP_1) && digitalRead(DIP_3)) {
     //TODO print error message to LCD
 
-    delay(500);
-  }
-
-  if (digitalRead(DIP_1)) {
-    state = MODE_PF1;
-  }
-  else if (digitalRead(DIP_2) {
-  state = MODE_PF2;
-}
-else {
-  state = MODE_AF;
-}
-
+    if(digitalRead(DIP_1)){
+      mode = MODE_PF1;
+    }
+    else if(digitalRead(DIP_2)){
+      mode = MODE_PF2;
+    }
+    else{
+      mode = MODE_AF;
+    }
 //Put delay to start?
 }
 
 void loop() {
   /*
-    myservo.write(0);
-    delay(2500);
-    myservo.write(180);
-    delay(2500);*/
-  switch (state) {
-    case PF1: principleFunction1();
-    case PF2: principleFunction2();
-    case AF: AF();
-  }
+  myservo.write(0);
+  delay(2500);
+  myservo.write(180);
+  delay(2500);*/
+  switch(mode){
+    case MODE_PF1: principleFunction1();
+    case MODE_PF2: principleFunction2();
+    case MODE_AF: additionalFunctionality();
+  }  
   /*
     for (int i=0; i<200; i+=5){
     setForwardSpeed(i);
@@ -188,8 +184,15 @@ void principleFunction2() {
 }
 
 /*
-   Updates PF2 motor speeds depending on current optical sensor readings
-*/
+ * additional functionality allows user to control robot remotely via bluetooth using keyboard input or hand tracking
+ */
+void additionalFunctionality(){
+  
+}
+
+/*
+ * Updates PF2 motor speeds depending on current optical sensor readings
+ */
 void updateDrive() {
   if (!opticalSensors[0] && !opticalSensors[1]) {
     setForwardSpeed(255);
