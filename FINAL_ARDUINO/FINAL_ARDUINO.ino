@@ -15,6 +15,15 @@ unsigned long timer = 0;
 /* PF2 stuff */
 int opticalSensors[] = {0, 0, 0, 0};
 int THRESHOLD = 500;
+int lastAdjustment = 0; //0 for left 1 for right
+int delayCount = 0;
+
+/* PF3 stuff*/
+int up = 0;
+int down = 0;
+int left = 0;
+int right = 0;
+int gear = 1;
 
 /* Constant Pin Assignments */
 const int LM35_PIN = A0;
@@ -27,18 +36,20 @@ const int MOTOR_POLARITY_PIN_LEFT = 4; //M1 (left wheel) , LOW is forward
 const int MOTOR_POWER_PIN_RIGHT = 6; //E1 (right wheel speed)
 const int MOTOR_POLARITY_PIN_RIGHT = 7; //M1 (right wheel), HIGH is forward
 
+const int OPTICAL_SENSOR_PIN0 = A2;
+const int OPTICAL_SENSOR_PIN1 = A3;
+
 //Pins for Hall Effect
 const int RIGHT_HE_PIN = 2;
 const int LEFT_HE_PIN = 3;
 
-const int OPTICAL_SENSOR_PIN0 = A2;
-const int OPTICAL_SENSOR_PIN1 = A3;
+const int MAX_SPEED = 255; //Max motor speed
 
+/*Hall effect */
 double leftLastMillis;
 double rightLastMillis;
 int rightRPM = 0;
 int leftRPM = 0;
-
 double distToCenter = 3;
 
 const int LEFT_FWD = HIGH;
@@ -137,14 +148,14 @@ void principleFunction1() {
       //Max speed, set currSpeed
       //Serial.print("Dist:");
       //Serial.println(currDist);
-      setForwardSpeed(255);
+      setForwardSpeed(MAX_SPEED);
     }
     else {
       //Serial.print("Dist:");
       //Serial.println(currDist);
 
       //Change speed as a function of distance
-      //int forwardSpeed = 255.0 - currDist * 25.5;
+      //int forwardSpeed = MAX_SPEED.0 - currDist * 25.5;
       //Serial.print("SPEED: ");
       //Serial.println(forwardSpeed);
       setForwardSpeed(150);
@@ -162,13 +173,16 @@ void principleFunction1() {
   if (leftDist > rightDist) {
     Serial.println("LEFT IS CLEAR");
     stationaryLeftTurn();
+    delay(1000);
     //Turn left 90 degrees
   }
   else {
     Serial.println("RIGHT IS CLEAR");
     stationaryRightTurn();
+    delay(1000);
     //Turn right 90 degrees
   }
+  stopRobot();
 }
 
 /*
@@ -180,10 +194,61 @@ void principleFunction2() {
 }
 
 /*
-   additional functionality allows user to control robot remotely via bluetooth using keyboard input or hand tracking
+   Principle function 3 allows arduino to communicate through bluetooth with a computer (using Processing)
+   The user can control the robot using traditional arrow key controls or through hand gestures using
+   a Leap Motion hand gesture device
 */
-void additionalFunctionality() {
+void principleFunction3() {
+  getProcessingCommand(); //Updates movement member variables
+  if (up && left) {
+    movingLeftTurn(255);
+  }
+  else if (up && right) {
+    movingRightTurn(255);
+  }
+  else if (down && left) {
+    movingLeftTurn(-255);
+  }
+  else if (down && right) {
+    movingRightTurn(-255);
+  }
+  else if (up) {
+    setForwardSpeed(255);
+  }
+  else if (down) {
+    setForwardSpeed(-255);
+  }
+  else if (left) {
+    stationaryLeftTurn();
+  }
+  else if (right) {
+    stationaryRightTurn();
+  }
+  else {
+    stopRobot();
+  }
+}
 
+/*
+   Gets instruction code from processing for PF3
+*/
+void getProcessingCommand() {
+  int instruction = 0;
+  while (true) {
+    if (Serial.available() > 0) {
+      instruction = (int)Serial.read();
+      while (instruction >= 100000) { //Reduce instruction to 5 digits
+        instruction /= 10;
+      }
+      up = instruction / 10000;
+      down = instruction / 1000 % 10;
+      left = instruction / 100 % 10;
+      right = instruction / 10 % 10;
+      gear = instruction % 10;
+
+      return;
+    }
+  }
 }
 
 /*
@@ -191,14 +256,50 @@ void additionalFunctionality() {
 */
 void updateDrive() {
   if (!opticalSensors[0] && !opticalSensors[1]) {
-    setForwardSpeed(255);
+    setForwardSpeed(MAX_SPEED);
+    delayCount = 0;
+    lastAdjustment = 10;
+    return;
   } else if (!opticalSensors[0] && opticalSensors[1]) {
     // off to the right
-    movingRightTurn(255);
+    delayCount = 0;
+    lastAdjustment = 0;
+    reduceLeft(1);
   } else if (opticalSensors[0] && !opticalSensors[1]) {
-    movingLeftTurn(255);
+    lastAdjustment = 1;
+    delayCount = 0;
+    reduceRight(1);
   } else if (opticalSensors[0] && opticalSensors[1]) {
-    setForwardSpeed(0);
+    if (delayCount < 100) {
+      if (lastAdjustment == 0) {
+        reduceLeft(1);
+      } else {
+        reduceRight(1);
+      }
+      delayCount++;
+      return;
+    }
+    stopRobot();
+  }
+}
+
+// reduce speed of left motor depending on value of spd
+// if spd == 1 reduce a bit, if spd == 2 reduce a lot
+void reduceLeft(int spd) {
+  if (spd == 1) {
+    analogWrite(MOTOR_POWER_PIN_LEFT, MAX_SPEED - 180);
+  } else if (spd == 2) {
+    analogWrite(MOTOR_POWER_PIN_LEFT, MAX_SPEED - 50);
+  }
+}
+
+// reduce speed of right motor
+// if spd == 1 reduce a bit, if spd == 2 reduce a lot
+void reduceRight(int spd) {
+  if (spd == 1) {
+    analogWrite(MOTOR_POWER_PIN_RIGHT, MAX_SPEED - 180);
+  } else if (spd == 2) {
+    analogWrite(MOTOR_POWER_PIN_RIGHT, MAX_SPEED - 50);
   }
 }
 
@@ -206,17 +307,15 @@ void updateDrive() {
    Reads the 4 optical sensors and updates sensors array
 */
 void updateOpticalSensors() {
-
   if (analogRead(OPTICAL_SENSOR_PIN0) > THRESHOLD) {
-    opticalSensors[0] = 1;
-  } else {
     opticalSensors[0] = 0;
-  }
-
-  if (analogRead(OPTICAL_SENSOR_PIN1) > THRESHOLD) {
-    opticalSensors[1] = 1;
   } else {
+    opticalSensors[0] = 1;
+  }
+  if (analogRead(OPTICAL_SENSOR_PIN1) > THRESHOLD) {
     opticalSensors[1] = 0;
+  } else {
+    opticalSensors[1] = 1;
   }
 }
 
@@ -243,70 +342,72 @@ void updateLCD() {
 /**
    Turns motors such that both wheels go in forward direction
    Changes currspeed to speed that we set forward speed to
-   Speed should be an int between 0 and 255
+   Speed should be an int between -255 and 255 (MAX_SPEED)
 */
 void setForwardSpeed(int speed) {
-  if (speed < 0) {
-    speed = 0;
+  if (speed >= 0) {
+    digitalWrite(MOTOR_POLARITY_PIN_LEFT, LEFT_FWD);
+    digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_FWD);
   }
-  digitalWrite(MOTOR_POLARITY_PIN_LEFT, LEFT_FWD);
-  digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_FWD);
-
-  //Calibrate:
+  else {
+    digitalWrite(MOTOR_POLARITY_PIN_LEFT, LEFT_BWD);
+    digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_BWD);
+  }
+  currSpeed = speed; //Set member var to speed with sign
+  speed = abs(speed);
   analogWrite(MOTOR_POWER_PIN_LEFT, speed);
   analogWrite(MOTOR_POWER_PIN_RIGHT, speed);
+  //Calibrate with HE:
   /*
-    if (leftTireSpeed < rightTireSpeed)
+    if (leftTireSpeed + 100 < rightTireSpeed)
       while (leftTireSpeed < rightTireSpeed) {
         analogWrite(MOTOR_POWER_PIN_RIGHT, speed -= 1);
         delay(10);
       }
-    else
+    else if (leftTireSpeed > rightTireSpeed + 100)
       while (rightTireSpeed < leftTireSpeed) {
         analogWrite(MOTOR_POWER_PIN_LEFT, speed -= 1);
         delay(10);
-      }
-  */
-  currSpeed = speed;
+      }*/
   //updateLCD();
 }
 
 /*
    Turns arduino left while setting right motor speed to speed
+   Speed can be between -255 and 255
 */
 void movingLeftTurn(int speed) {
-  if (speed < 0) {
-    speed = 0;
+  if (speed >= 0) {
+    digitalWrite(MOTOR_POLARITY_PIN_LEFT, LEFT_FWD);
+    digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_FWD);
   }
-  digitalWrite(MOTOR_POLARITY_PIN_LEFT, LEFT_FWD);
-  digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_FWD);
-
-  //May need calibration
-  analogWrite(MOTOR_POWER_PIN_LEFT, speed);
-  if (speed - 100 < 0)
-    analogWrite(MOTOR_POWER_PIN_RIGHT, 0);
-  else
-    analogWrite(MOTOR_POWER_PIN_RIGHT, speed - 100);
-  currSpeed = speed;
+  else {
+    digitalWrite(MOTOR_POLARITY_PIN_LEFT, LEFT_BWD);
+    digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_BWD);
+  }
+  currSpeed = speed; //Set member var to speed with sign
+  speed = abs(speed);
+  analogWrite(MOTOR_POWER_PIN_LEFT, speed - 100);
+  analogWrite(MOTOR_POWER_PIN_RIGHT, speed);
 }
 
 /*
    Turns arduino right while setting left motor speed to speed
+   Speed can be between -255 and 255
 */
 void movingRightTurn(int speed) {
-  if (speed < 0) {
-    speed = 0;
+  if (speed >= 0) {
+    digitalWrite(MOTOR_POLARITY_PIN_LEFT, LEFT_FWD);
+    digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_FWD);
   }
-  digitalWrite(MOTOR_POLARITY_PIN_LEFT, LEFT_FWD);
-  digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_FWD);
-
-  //May need calibration
-  analogWrite(MOTOR_POWER_PIN_RIGHT, speed);
-  if (speed - 100 < 0)
-    analogWrite(MOTOR_POWER_PIN_LEFT, 0);
-  else
-    analogWrite(MOTOR_POWER_PIN_LEFT, speed - 100);
-  currSpeed = speed;
+  else {
+    digitalWrite(MOTOR_POLARITY_PIN_LEFT, LEFT_BWD);
+    digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_BWD);
+  }
+  currSpeed = speed; //Set member var to speed with sign
+  speed = abs(speed);
+  analogWrite(MOTOR_POWER_PIN_LEFT, speed);
+  analogWrite(MOTOR_POWER_PIN_RIGHT, speed - 100);
 }
 
 /**
@@ -319,12 +420,12 @@ void stationaryLeftTurn() {
 
   digitalWrite(MOTOR_POLARITY_PIN_LEFT, LEFT_BWD);
   digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_FWD);
-  analogWrite(MOTOR_POWER_PIN_LEFT, 255); //Left wheel
-  analogWrite(MOTOR_POWER_PIN_RIGHT, 255); //Right wheel
-  delay(1000);
-
-  analogWrite(MOTOR_POWER_PIN_LEFT, 0);
-  analogWrite(MOTOR_POWER_PIN_RIGHT, 0);
+  analogWrite(MOTOR_POWER_PIN_LEFT, MAX_SPEED); //Left wheel
+  analogWrite(MOTOR_POWER_PIN_RIGHT, MAX_SPEED); //Right wheel
+  /*
+    delay(1000);
+    analogWrite(MOTOR_POWER_PIN_LEFT, 0);
+    analogWrite(MOTOR_POWER_PIN_RIGHT, 0);*/
 }
 
 /**
@@ -337,12 +438,21 @@ void stationaryRightTurn() {
 
   digitalWrite(MOTOR_POLARITY_PIN_LEFT, LEFT_FWD);
   digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_BWD);
-  analogWrite(MOTOR_POWER_PIN_LEFT, 255);
-  analogWrite(MOTOR_POWER_PIN_RIGHT, 255);
-  delay(1000);
+  analogWrite(MOTOR_POWER_PIN_LEFT, MAX_SPEED);
+  analogWrite(MOTOR_POWER_PIN_RIGHT, MAX_SPEED);
+  /*
+    delay(1000);
+    analogWrite(MOTOR_POWER_PIN_LEFT, 0);
+    analogWrite(MOTOR_POWER_PIN_RIGHT, 0);*/
+}
 
+/**
+  Stops movement in the robot
+*/
+void stopRobot() {
   analogWrite(MOTOR_POWER_PIN_LEFT, 0);
   analogWrite(MOTOR_POWER_PIN_RIGHT, 0);
+  currSpeed = 0;
 }
 
 /**
@@ -351,8 +461,6 @@ void stationaryRightTurn() {
 */
 float getDist() {
   currTemp = getLMTemp(LM35_PIN);
-  Serial.print("Curr temp:");
-  Serial.println(currTemp);
   speedSound = 331.5 + (0.6 * currTemp);
   currDist = readHCSR04(HC_SR04_TRIG_PIN, HC_SR04_ECHO_PIN);
   return currDist;
@@ -407,7 +515,9 @@ float receiveHCSR04(int echoPin) {
   }
 }
 
-
+/**
+   Update left hall effect sensor value, triggered by interrupt
+*/
 void updateLeftHE() {
   leftRPM++;
   if (leftRPM > 3) {
@@ -420,8 +530,10 @@ void updateLeftHE() {
   }
 }
 
+/**
+   Update right hall effect sensor value, triggered by interrupt
+*/
 void updateRightHE() {
-
   rightRPM++;
   if (rightRPM > 3) {
     double timeChange = millis() - rightLastMillis;
@@ -433,7 +545,9 @@ void updateRightHE() {
   }
 }
 
-
+/**
+   Calculate tire speeds using hall effect sensors
+*/
 double calcTireSpeed(double time) {
   return (distToCenter * PI) / (time / 1000);
 }
