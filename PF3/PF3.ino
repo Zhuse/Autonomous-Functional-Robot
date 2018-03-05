@@ -45,15 +45,6 @@ const int LCD_D5 = 3;
 const int LCD_D6 = 4;
 const int LCD_D7 = 5;
 
-//Pins for DIP Switch //TODO CHANGE THIS
-const int DIP_1 = 1; 
-const int DIP_2 = 2;
-const int DIP_3 = 3;
-int state;  //decide which principle function to run on setup(). 0 for PF1, 1 for PF2, 2 for AF
-const int PF1 = 0;
-const int PF2 = 1;
-const int PF3 = 2;
-
 Servo myservo;  // create servo object to control a servo
 LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7); //setup lcd
 
@@ -75,40 +66,16 @@ void setup() {
 
   attachInterrupt(digitalPinToInterrupt(LEFT_HE_PIN), updateLeftHE, RISING);
   attachInterrupt(digitalPinToInterrupt(RIGHT_HE_PIN), updateRightHE, RISING);
-
-  lcd.begin(16, 2); //Setup LCD num of cols and rows
-  updateLCD();
   
   // Set initial rotation speed to 0
   analogWrite(MOTOR_POWER_PIN1, 0);
   //digitalWrite(MOTOR_POLARITY_PIN1, LOW);
   analogWrite(MOTOR_POWER_PIN2, 0);
   //digitalWrite(MOTOR_POLARITY_PIN2, HIGH);
-
-  //Put delay to start? 
 }
 
 void loop() {
-  /*
-  myservo.write(0);
-  delay(2500);
-  myservo.write(180);
-  delay(2500);*/
-
-  principleFunction1();
-  
-  /*
-  for (int i=0; i<200; i+=5){
-    setForwardSpeed(i);
-    Serial.println(getLMTemp(LM35_PIN));
-    if (i<100){
-      myservo.write(0);
-    }
-    else{
-      myservo.write(180);
-    }
-    delay(250);
-  }*/
+  principleFunction3();
 }
 
 /**
@@ -120,23 +87,14 @@ void loop() {
 void principleFunction1(){
   while (getDist()>10){
     if (currDist > 50){
-      //Max speed, set currSpeed
-      //Serial.print("Dist:");
-      //Serial.println(currDist);
       setForwardSpeed(255);
     }
     else if (currDist > 10) {
-      //Serial.print("Dist:");
-      //Serial.println(currDist);
-    
       //Change speed as a function of distance
       int forwardSpeed = 255.0 - currDist*25.5;
-      Serial.print("SPEED: ");
-      Serial.println(forwardSpeed);
       setForwardSpeed(forwardSpeed);
     }
   }
-  stopRobot();
   myservo.write(180); //Check left
   delay(500);
   float leftDist = getDist();
@@ -157,87 +115,62 @@ void principleFunction1(){
   }
 }
 
-/*
- * Principle function 2 allows robot to track and follow black electrical tape laid on the ground
- */
-void principleFunction2() {
-  updateOpticalSensors();
-  updateDrive();
-}
-
-/*
- * Updates PF2 motor speeds depending on current optical sensor readings
- */
-void updateDrive() {
-  if (!opticalSensors[0] && !opticalSensors[1]) {
+void principleFunction3(){
+  String command = getProcessingCommand();
+  switch (1) {
+  case 1://"forwardStraight":
     setForwardSpeed(255);
-  } else if (!opticalSensors[0] && opticalSensors[1]) {
-    // off to the right
+    break;
+  case 2://"forwardRight":
     movingRightTurn(255);
-  } else if (opticalSensors[0] && !opticalSensors[1]) {
+    break;
+  case 3://"forwardLeft":
     movingLeftTurn(255);
-  } else if (opticalSensors[0] && opticalSensors[1]) {
-    setForwardSpeed(0);
+    break;
+  case 4://"backwardsStraight":
+    setForwardSpeed(-255);
+    break;
+  case 5://backwardsLeft
+    movingLeftTurn(-255);
+    break;
+  case 6://backwardsRight
+    movingRightTurn(-255);
+    break;
+  default: //stop
+    stopRobot();
+}
+  
+}
+
+
+String getProcessingCommand(){
+  while (true) {
+      if (Serial.available()>0) {
+        return ((String)Serial.read()).substring(0,10);
+      }
   }
 }
 
-/* 
- * Reads the 4 optical sensors and updates sensors array  
- */
-void updateOpticalSensors() { 
-
-  if (analogRead(OPTICAL_SENSOR_PIN0) > THRESHOLD) {
-    opticalSensors[0] = 1;
-  } else {
-    opticalSensors[0] = 0;
-  }
-
-  if (analogRead(OPTICAL_SENSOR_PIN1) > THRESHOLD) {
-    opticalSensors[1] = 1;
-  } else {
-    opticalSensors[1] = 0;
-  }
-}
-
-/**
- * Updates the LCD display reading given the current speed of the robot (in the member variable)
- * and the mode it's in
- */
-void updateLCD(){
-  if (millis()-timer < 100)
-    return; //Do not update more than once a second
-    
-  timer = millis();
-  lcd.clear();
-  lcd.print("DIST: ");
-  lcd.setCursor(6, 0);
-  lcd.print(currDist);
-  lcd.setCursor(0, 1);
-  lcd.print("SPEED: ");
-  lcd.setCursor(7, 1);
-  lcd.print(currSpeed);
-}
-
-/**
- * Stops movement in the robot
- */
-void stopRobot(){
-  analogWrite(MOTOR_POWER_PIN1, 0);
-  analogWrite(MOTOR_POWER_PIN2, 0);
-  currSpeed = 0;
-}
 
 /**
  * Turns motors such that both wheels go in forward direction
  * Changes currspeed to speed that we set forward speed to
- * Speed should be an int between 0 and 255
+ * Speed should be an int between -255 and 255
  */
 void setForwardSpeed(int speed){
-  if (speed<0){
-    speed = 0;
+  int wheel_pin1, wheel_pin2;
+  if (speed>0){
+    wheel_pin1 = MOTOR_POLARITY_PIN1;
+    wheel_pin2 = MOTOR_POLARITY_PIN2;
   }
-  digitalWrite(MOTOR_POLARITY_PIN1, LOW);
-  digitalWrite(MOTOR_POLARITY_PIN2, HIGH);
+  else{
+    wheel_pin1 = MOTOR_POLARITY_PIN2;
+    wheel_pin2 = MOTOR_POLARITY_PIN1;
+  }
+  digitalWrite(wheel_pin1, LOW);
+  digitalWrite(wheel_pin2, HIGH);
+  currSpeed = speed;
+  speed = abs(speed);
 
   //Calibrate:
   analogWrite(MOTOR_POWER_PIN1, speed);
@@ -251,7 +184,6 @@ void setForwardSpeed(int speed){
     delay(50);
   }
   
-  currSpeed = speed;
   //updateLCD();
 }
 
@@ -259,11 +191,19 @@ void setForwardSpeed(int speed){
  * Turns arduino left while setting right motor speed to speed
  */
 void movingLeftTurn(int speed){
-  if (speed<0){
-    speed = 0;
+  int wheel_pin1, wheel_pin2;
+  if (speed>0){
+    wheel_pin1 = MOTOR_POLARITY_PIN1;
+    wheel_pin2 = MOTOR_POLARITY_PIN2;
   }
-  digitalWrite(MOTOR_POLARITY_PIN1, LOW);
-  digitalWrite(MOTOR_POLARITY_PIN2, HIGH);
+  else{
+    wheel_pin1 = MOTOR_POLARITY_PIN2;
+    wheel_pin2 = MOTOR_POLARITY_PIN1;
+  }
+  digitalWrite(wheel_pin1, LOW);
+  digitalWrite(wheel_pin2, HIGH);
+  currSpeed = speed;
+  speed = abs(speed);
 
   //May need calibration
   analogWrite(MOTOR_POWER_PIN1, speed);
@@ -271,26 +211,41 @@ void movingLeftTurn(int speed){
       analogWrite(MOTOR_POWER_PIN2, 0);
   else
     analogWrite(MOTOR_POWER_PIN2, speed-100);
-  currSpeed = speed;
 }
 
 /*
  * Turns arduino right while setting left motor speed to speed
  */
 void movingRightTurn(int speed){
-  if (speed<0){
-    speed = 0;
+  int wheel_pin1, wheel_pin2;
+  if (speed>0){
+    wheel_pin1 = MOTOR_POLARITY_PIN1;
+    wheel_pin2 = MOTOR_POLARITY_PIN2;
   }
-  digitalWrite(MOTOR_POLARITY_PIN1, LOW);
-  digitalWrite(MOTOR_POLARITY_PIN2, HIGH);
-
+  else{
+    wheel_pin1 = MOTOR_POLARITY_PIN2;
+    wheel_pin2 = MOTOR_POLARITY_PIN1;
+  }
+  digitalWrite(wheel_pin1, LOW);
+  digitalWrite(wheel_pin2, HIGH);
+  currSpeed = speed;
+  speed = abs(speed);
+  
   //May need calibration
   analogWrite(MOTOR_POWER_PIN2, speed);
   if (speed-100<0)
       analogWrite(MOTOR_POWER_PIN1, 0);
   else
     analogWrite(MOTOR_POWER_PIN1, speed-100);
-  currSpeed = speed;
+}
+
+/**
+ * Stops movement in the robot
+ */
+void stopRobot(){
+  analogWrite(MOTOR_POWER_PIN1, 0);
+  analogWrite(MOTOR_POWER_PIN2, 0);
+  currSpeed = 0;
 }
 
 /**
@@ -377,7 +332,7 @@ void initiateHCSR04(int trigPin){
 float receiveHCSR04(int echoPin){
   unsigned long pulseDuration; 
   unsigned long timeOutDuration;
-
+ 
   timeOutDuration = 36000;
   pulseDuration = pulseIn(echoPin, HIGH, timeOutDuration);
 
