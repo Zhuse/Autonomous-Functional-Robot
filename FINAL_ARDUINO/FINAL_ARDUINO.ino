@@ -49,10 +49,10 @@ const int LCD_D7 = 5;
 const int DIP_1 = 1;
 const int DIP_2 = 2;
 const int DIP_3 = 3;
-int mode;  //decide which principle function to run on setup(). 0 for PF1, 1 for PF2, 2 for AF
-const int PF1 = 0;
-const int PF2 = 1;
-const int AF = 2;
+int mode;  //decides which principle function to run on setup(). 0 for PF1, 1 for PF2, 2 for AF
+const int MODE_PF1 = 0;
+const int MODE_PF2 = 1;
+const int MODE_AF = 2;
 
 Servo myservo;  // create servo object to control a servo
 LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7); //setup lcd
@@ -97,13 +97,13 @@ void setup() {
     }
 
     if(digitalRead(DIP_1)){
-      state = PF1;
+      state = MODE_PF1;
     }
     else if(digitalRead(DIP_2){
-      state = PF2;
+      state = MODE_PF2;
     }
     else{
-      state = AF;
+      state = MODE_AF;
     }
 
   //Put delay to start? 
