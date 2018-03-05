@@ -1,4 +1,4 @@
-#include <SPI.h>
+ #include <SPI.h>
 #include <Servo.h>
 #include <LiquidCrystal.h>
 
@@ -22,10 +22,10 @@ const int SERVO_PIN = A1;
 const int HC_SR04_TRIG_PIN = 12;
 const int HC_SR04_ECHO_PIN = 13;
 
-const int MOTOR_POWER_PIN1 = 5; //E1 (left wheel speed)
-const int MOTOR_POLARITY_PIN1 = 4; //M1 (left wheel) , LOW is forward
-const int MOTOR_POWER_PIN2 = 6; //E1 (right wheel speed)
-const int MOTOR_POLARITY_PIN2 = 7; //M1 (right wheel), HIGH is forward
+const int MOTOR_POWER_PIN_LEFT = 5; //E1 (left wheel speed)
+const int MOTOR_POLARITY_PIN_LEFT = 4; //M1 (left wheel) , LOW is forward
+const int MOTOR_POWER_PIN_RIGHT = 6; //E1 (right wheel speed)
+const int MOTOR_POLARITY_PIN_RIGHT = 7; //M1 (right wheel), HIGH is forward
 
 //Pins for Hall Effect
 const int RIGHT_HE_PIN = 2;
@@ -38,6 +38,11 @@ double leftLastMillis;
 double rightLastMillis;
 
 double distToCenter = 3;
+
+const int LEFT_FWD = HIGH;
+const int LEFT_BWD = LOW;
+const int RIGHT_FWD = HIGH;
+const int RIGHT_BWD = LOW;
 
 const int LCD_PIN = 10;
 
@@ -60,8 +65,8 @@ void setup() {
   pinMode(HC_SR04_ECHO_PIN, INPUT);
   myservo.attach(SERVO_PIN);
   myservo.write(servoPos); //set servo position to mid
-  pinMode(MOTOR_POLARITY_PIN1, OUTPUT); //Direction
-  pinMode(MOTOR_POLARITY_PIN2, OUTPUT); //Direction
+  pinMode(MOTOR_POLARITY_PIN_LEFT, OUTPUT); //Direction
+  pinMode(MOTOR_POLARITY_PIN_RIGHT, OUTPUT); //Direction
 
   pinMode(RIGHT_HE_PIN, INPUT_PULLUP);
   pinMode(LEFT_HE_PIN, INPUT_PULLUP);
@@ -76,13 +81,12 @@ void setup() {
   updateLCD();
 
   // Set initial rotation speed to 0
-  analogWrite(MOTOR_POWER_PIN1, 0);
-  //digitalWrite(MOTOR_POLARITY_PIN1, LOW);
-  analogWrite(MOTOR_POWER_PIN2, 0);
-  //digitalWrite(MOTOR_POLARITY_PIN2, HIGH);
+  analogWrite(MOTOR_POWER_PIN_LEFT, 0);
+  analogWrite(MOTOR_POWER_PIN_RIGHT, 0);
 
   //check dip switch status and set mode appropriately. Only DIP_1 on for PF1, Only DIP_2 on for PF2, Only DIP_3 on for AF
   //error check for unsupported dip switch input
+  /*
   while (digitalRead(DIP_1) && digitalRead(DIP_2) && digitalRead(DIP_3)
          || digitalRead(DIP_1) && digitalRead(DIP_2)
          || digitalRead(DIP_2) && digitalRead(DIP_3)
@@ -98,32 +102,17 @@ void setup() {
     else{
       mode = MODE_AF;
     }
-  }
+  }*/
 }
 
 void loop() {
   /*
-  myservo.write(0);
-  delay(2500);
-  myservo.write(180);
-  delay(2500);*/
   switch(mode){
     case MODE_PF1: principleFunction1();
     case MODE_PF2: principleFunction2();
     case MODE_AF: additionalFunctionality();
-  }  
-  /*
-    for (int i=0; i<200; i+=5){
-    setForwardSpeed(i);
-    Serial.println(getLMTemp(LM35_PIN));
-    if (i<100){
-      myservo.write(0);
-    }
-    else{
-      myservo.write(180);
-    }
-    delay(250);
-    }*/
+  }  */
+  principleFunction1();
 }
 
 /**
@@ -136,13 +125,13 @@ void principleFunction1() {
   while (getDist() > 10) {
     if (currDist > 50) {
       //Max speed, set currSpeed
-      //Serial.print("Dist:");
-      //Serial.println(currDist);
+      Serial.print("Dist:");
+      Serial.println(currDist);
       setForwardSpeed(255);
     }
     else if (currDist > 10) {
-      //Serial.print("Dist:");
-      //Serial.println(currDist);
+      Serial.print("Dist:");
+      Serial.println(currDist);
 
       //Change speed as a function of distance
       int forwardSpeed = 255.0 - currDist * 25.5;
@@ -248,18 +237,18 @@ void setForwardSpeed(int speed) {
   if (speed < 0) {
     speed = 0;
   }
-  digitalWrite(MOTOR_POLARITY_PIN1, LOW);
-  digitalWrite(MOTOR_POLARITY_PIN2, HIGH);
+  digitalWrite(MOTOR_POLARITY_PIN_LEFT, LEFT_FWD);
+  digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_FWD);
 
   //Calibrate:
-  analogWrite(MOTOR_POWER_PIN1, speed);
-  analogWrite(MOTOR_POWER_PIN2, speed);
+  analogWrite(MOTOR_POWER_PIN_LEFT, speed);
+  analogWrite(MOTOR_POWER_PIN_RIGHT, speed);
   while (leftTireSpeed < rightTireSpeed) {
-    analogWrite(MOTOR_POWER_PIN2, speed -= 5);
+    analogWrite(MOTOR_POWER_PIN_RIGHT, speed -= 5);
     delay(50);
   }
   while (rightTireSpeed < leftTireSpeed) {
-    analogWrite(MOTOR_POWER_PIN1, speed -= 5);
+    analogWrite(MOTOR_POWER_PIN_LEFT, speed -= 5);
     delay(50);
   }
 
@@ -274,15 +263,15 @@ void movingLeftTurn(int speed) {
   if (speed < 0) {
     speed = 0;
   }
-  digitalWrite(MOTOR_POLARITY_PIN1, LOW);
-  digitalWrite(MOTOR_POLARITY_PIN2, HIGH);
+  digitalWrite(MOTOR_POLARITY_PIN_LEFT, LEFT_FWD);
+  digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_FWD);
 
   //May need calibration
-  analogWrite(MOTOR_POWER_PIN1, speed);
+  analogWrite(MOTOR_POWER_PIN_LEFT, speed);
   if (speed - 100 < 0)
-    analogWrite(MOTOR_POWER_PIN2, 0);
+    analogWrite(MOTOR_POWER_PIN_RIGHT, 0);
   else
-    analogWrite(MOTOR_POWER_PIN2, speed - 100);
+    analogWrite(MOTOR_POWER_PIN_RIGHT, speed - 100);
   currSpeed = speed;
 }
 
@@ -293,15 +282,15 @@ void movingRightTurn(int speed) {
   if (speed < 0) {
     speed = 0;
   }
-  digitalWrite(MOTOR_POLARITY_PIN1, LOW);
-  digitalWrite(MOTOR_POLARITY_PIN2, HIGH);
+  digitalWrite(MOTOR_POLARITY_PIN_LEFT, LEFT_FWD);
+  digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_FWD);
 
   //May need calibration
-  analogWrite(MOTOR_POWER_PIN2, speed);
+  analogWrite(MOTOR_POWER_PIN_RIGHT, speed);
   if (speed - 100 < 0)
-    analogWrite(MOTOR_POWER_PIN1, 0);
+    analogWrite(MOTOR_POWER_PIN_LEFT, 0);
   else
-    analogWrite(MOTOR_POWER_PIN1, speed - 100);
+    analogWrite(MOTOR_POWER_PIN_LEFT, speed - 100);
   currSpeed = speed;
 }
 
@@ -313,14 +302,14 @@ void stationaryLeftTurn() {
   currSpeed = 0;
   //updateLCD();
 
-  digitalWrite(MOTOR_POLARITY_PIN1, LOW);
-  digitalWrite(MOTOR_POLARITY_PIN2, LOW);
-  analogWrite(MOTOR_POWER_PIN1, 255); //Left wheel
-  analogWrite(MOTOR_POWER_PIN2, 255); //Right wheel
+  digitalWrite(MOTOR_POLARITY_PIN_LEFT, LEFT_BWD);
+  digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_FWD);
+  analogWrite(MOTOR_POWER_PIN_LEFT, 255); //Left wheel
+  analogWrite(MOTOR_POWER_PIN_RIGHT, 255); //Right wheel
   delay(5000);
 
-  analogWrite(MOTOR_POWER_PIN1, 0);
-  analogWrite(MOTOR_POWER_PIN2, 0);
+  analogWrite(MOTOR_POWER_PIN_LEFT, 0);
+  analogWrite(MOTOR_POWER_PIN_RIGHT, 0);
 }
 
 /**
@@ -331,14 +320,14 @@ void stationaryRightTurn() {
   currSpeed = 0;
   //updateLCD();
 
-  digitalWrite(MOTOR_POLARITY_PIN1, LOW);
-  digitalWrite(MOTOR_POLARITY_PIN2, LOW);
-  analogWrite(MOTOR_POWER_PIN1, 255);
-  analogWrite(MOTOR_POWER_PIN2, 255);
+  digitalWrite(MOTOR_POLARITY_PIN_LEFT, LEFT_FWD);
+  digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_BWD);
+  analogWrite(MOTOR_POWER_PIN_LEFT, 255);
+  analogWrite(MOTOR_POWER_PIN_RIGHT, 255);
   delay(5000);
 
-  analogWrite(MOTOR_POWER_PIN1, 0);
-  analogWrite(MOTOR_POWER_PIN2, 0);
+  analogWrite(MOTOR_POWER_PIN_LEFT, 0);
+  analogWrite(MOTOR_POWER_PIN_RIGHT, 0);
 }
 
 /**
@@ -404,6 +393,7 @@ float receiveHCSR04(int echoPin) {
 void updateLeftHE() {
   double timeChange = millis() - leftLastMillis;
   leftLastMillis = millis();
+  Serial.print("LEFT HE ");
   Serial.println(calcTireSpeed(timeChange));
   leftTireSpeed = calcTireSpeed(timeChange);
 }
@@ -411,6 +401,7 @@ void updateLeftHE() {
 void updateRightHE() {
   double timeChange = millis() - rightLastMillis;
   rightLastMillis = millis();
+  Serial.print("RIGHT HE ");
   Serial.println(calcTireSpeed(timeChange));
   rightTireSpeed = calcTireSpeed(timeChange);
 }
