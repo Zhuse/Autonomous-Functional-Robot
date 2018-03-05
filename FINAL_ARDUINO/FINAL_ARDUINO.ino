@@ -45,6 +45,15 @@ const int LCD_D5 = 3;
 const int LCD_D6 = 4;
 const int LCD_D7 = 5;
 
+//Pins for DIP Switch //TODO CHANGE THIS
+const int DIP_1 = 1; 
+const int DIP_2 = 2;
+const int DIP_3 = 3;
+int state;  //decide which principle function to run on setup(). 0 for PF1, 1 for PF2, 2 for AF
+const int PF1 = 0;
+const int PF2 = 1;
+const int PF3 = 2;
+
 Servo myservo;  // create servo object to control a servo
 LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7); //setup lcd
 
