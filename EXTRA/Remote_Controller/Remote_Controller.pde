@@ -322,7 +322,7 @@ void leapOnKeyTapGesture(KeyTapGesture g){
       xPos = 1105;
       plot.clear();
     }
-      System.out.println(upUse + " " + downUse + " " + leftUse + " " + rightUse + " " + gear);
+      System.out.println(upUse + "" + downUse + "" + leftUse + "" + rightUse + "" + gear);
       if(upUse == 1){
         //myPort.write("up");
       }
