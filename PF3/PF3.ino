@@ -45,6 +45,12 @@ const int LCD_D5 = 3;
 const int LCD_D6 = 4;
 const int LCD_D7 = 5;
 
+int up = 0;
+int down = 0;
+int left = 0;
+int right = 0;
+int gear = 1;
+
 Servo myservo;  // create servo object to control a servo
 LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7); //setup lcd
 
@@ -143,10 +149,16 @@ void principleFunction3(){
 }
 
 
-String getProcessingCommand(){
+void getProcessingCommand(){
+  int instruction = 0;
   while (true) {
       if (Serial.available()>0) {
-        return ((String)Serial.read()).substring(0,10);
+        instruction = (int)Serial.read();
+        up = instruction / 10000;
+        down = instruction / 1000 % 10;
+        left = instruction / 100 % 10;
+        right = instruction / 10 % 10;
+        gear = instruction % 10;
       }
   }
 }
