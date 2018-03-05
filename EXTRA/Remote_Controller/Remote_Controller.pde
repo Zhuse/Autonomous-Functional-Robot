@@ -209,6 +209,7 @@ void leapOnKeyTapGesture(KeyTapGesture g){
   
   //Redraw the canvas
   void draw () {
+    String txtIns = "";
     int counter = 0; //index for line objects
     float x; 
     float y;
@@ -323,10 +324,14 @@ void leapOnKeyTapGesture(KeyTapGesture g){
       plot.clear();
     }
       System.out.println(upUse + "" + downUse + "" + leftUse + "" + rightUse + "" + gear);
-      if(upUse == 1){
-        //myPort.write("up");
+      txtIns = determineIns();
+      if(mode == 1){
+         text(txtIns, width / 1.42, height / 1.15);
       }
       if(mode == 1){
+        fill(255,255,255,150);
+        stroke(255,255,255, 150);
+       rect(990, 190, 660, 260);
        if (leap.hasImages()) {
       for (Image camera : leap.getImages()) {
         if (camera.isLeft()) {
@@ -340,6 +345,33 @@ void leapOnKeyTapGesture(KeyTapGesture g){
     delay(1);
   }
   
+  String determineIns (){
+    String ins = "";
+    if(upUse == 1){
+      if(leftUse == 1){
+        ins = "Forward-Left";
+      } else if (rightUse == 1){
+        ins = "Forward-Right";
+      } else {
+        ins = "Forward";
+      }
+    } else if(downUse == 1){
+      if(leftUse == 1){
+        ins = "Backward-Left";
+      } else if (rightUse == 1){
+        ins = "Backward-Right";
+      } else {
+        ins = "Forward";
+      }
+    } else if(rightUse == 1){
+      ins = "Rotate Right";
+    } else if(leftUse == 1){
+      ins = "Rotate Left";
+    } else {
+      ins = "OFF";
+    }
+    return ins;
+  }
   //Detect for pressed keys
   void keyPressed() {
     if (key == CODED) {

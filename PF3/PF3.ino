@@ -384,4 +384,3 @@ void updateRightHE() {
 double calcTireSpeed(double time) {
   return (distToCenter * PI) / (time / 1000);
 }
-
