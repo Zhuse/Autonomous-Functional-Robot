@@ -40,7 +40,7 @@ const int MOTOR_POLARITY_PIN_RIGHT = 7; //M1 (right wheel), HIGH is forward
 const int OPTICAL_SENSOR_PIN0 = A2;
 const int OPTICAL_SENSOR_PIN1 = A3;
 
-//Pins for DIP Switch 
+//Pins for DIP Switch
 const int DIP_PIN1 = A4;
 const int DIP_PIN2 = A5;
 
@@ -104,16 +104,17 @@ void setup() {
 void loop() {
   //Read DIP pins after each loop of some PF
   if (!digitalRead(DIP_PIN1) && !digitalRead(DIP_PIN2)) {
-    principleFunction1();
+    stopRobot();
   }
   else if (digitalRead(DIP_PIN1) && !digitalRead(DIP_PIN2)) {
-    principleFunction2();
+    principleFunction1();
   }
   else if (!digitalRead(DIP_PIN1) && digitalRead(DIP_PIN2)) {
-    principleFunction3();
+    principleFunction2();
   }
   else {
     stopRobot();
+    //principleFunction3();
   }
 }
 
