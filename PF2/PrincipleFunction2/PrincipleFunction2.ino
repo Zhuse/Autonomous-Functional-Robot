@@ -23,7 +23,7 @@ const int maxSpeed = 255;
 
 const int opticalSensor0Pin = A2;
 const int opticalSensor1Pin = A3;
-//const int opticalSensor2Pin = A4;
+//const int opticalSensor2Pin = A3;
 //const int opticalSensor3Pin = A5;
 
 
@@ -33,13 +33,14 @@ const int leftMotorPolarity = 4; //M1 (left wheel) , LOW is forward
 const int rightMotorPower = 6; //E1 (right wheel speed)
 const int rightMotorPolarity = 7; //M1 (right wheel), HIGH is forward
 
-const int leftFwd = LOW;
-const int leftBwd = HIGH;
+const int leftFwd = HIGH;
+const int leftBwd = LOW;
 
 const int rightFwd = HIGH;
 const int rightBwd = LOW;
 
-
+int lastAdjustment = 0; // 0 for left 1 for right 
+int delayCount = 0;
 
 
 
@@ -77,6 +78,13 @@ void setup() {
 
 
 void loop() {
+  Serial.print(analogRead(opticalSensor0Pin));
+  Serial.print("    ");
+ Serial.print(analogRead(opticalSensor1Pin));
+   Serial.print("    ");
+ Serial.println(delayCount);
+
+
 	principleFunction2();
 }
 
@@ -94,13 +102,33 @@ void updateDrive() {
 	
 	if (!opticalSensors[0] && !opticalSensors[1]) {
 		fullSpeed();
+    delayCount = 0;
+        lastAdjustment = 10;
+
 		return; 
 	} else if (!opticalSensors[0] && opticalSensors[1]) {
     // off to the right
+    delayCount = 0;
+    lastAdjustment = 0;
     reduceLeft(1);
 	} else if (opticalSensors[0] && !opticalSensors[1]) {
+    lastAdjustment = 1;
+    delayCount = 0;
     reduceRight(1);
 	} else if (opticalSensors[0] && opticalSensors[1]) {
+    if (delayCount < 100) {
+      if (lastAdjustment == 0) {
+        reduceLeft(1);
+      } else {
+        reduceRight(1);
+      }
+          delayCount++;
+
+      return;
+    }
+ 
+    
+    
     stopSpeed();
 	}
 
@@ -132,7 +160,7 @@ void updateDrive() {
 // if spd == 1 reduce a bit, if spd == 2 reduce a lot
 void reduceLeft(int spd) {
 	if (spd == 1) {
-		analogWrite(leftMotorPower, maxSpeed - 20);
+		analogWrite(leftMotorPower, maxSpeed - 180);
 	} else if (spd == 2) {
 		analogWrite(leftMotorPower, maxSpeed - 50);
 	}  
@@ -142,7 +170,7 @@ void reduceLeft(int spd) {
 // if spd == 1 reduce a bit, if spd == 2 reduce a lot
 void reduceRight(int spd) {
 	if (spd == 1) {
-		analogWrite(rightMotorPower, maxSpeed - 20);
+		analogWrite(rightMotorPower, maxSpeed - 180);
 	} else if (spd == 2) {
 		analogWrite(rightMotorPower, maxSpeed - 50);
 	}  
@@ -176,15 +204,15 @@ void crossing() {
 void readSensors() { 
 
 	if (analogRead(opticalSensor0Pin) > THRESHOLD) {
-		opticalSensors[0] = 1;
-	} else {
 		opticalSensors[0] = 0;
+	} else {
+		opticalSensors[0] = 1;
 	}
 
 	if (analogRead(opticalSensor1Pin) > THRESHOLD) {
-		opticalSensors[1] = 1;
-	} else {
 		opticalSensors[1] = 0;
+	} else {
+		opticalSensors[1] = 1;
 	}
 /*
 	if (analogRead(opticalSensor2Pin) > THRESHOLD) {

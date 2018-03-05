@@ -1,4 +1,4 @@
-#define TCRT5000_SENSOR_PIN A2
+#define TCRT5000_SENSOR_PIN A5
 
 void setup() {
   Serial.begin(9600);
