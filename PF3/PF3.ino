@@ -168,6 +168,8 @@ void getProcessingCommand() {
       left = instruction / 100 % 10;
       right = instruction / 10 % 10;
       gear = instruction % 10;
+
+      return;
     }
   }
 }
