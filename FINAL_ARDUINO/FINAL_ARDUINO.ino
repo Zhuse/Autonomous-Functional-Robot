@@ -97,13 +97,13 @@ void setup() {
     }
 
     if(digitalRead(DIP_1)){
-      state = MODE_PF1;
+      mode = MODE_PF1;
     }
-    else if(digitalRead(DIP_2){
-      state = MODE_PF2;
+    else if(digitalRead(DIP_2)){
+      mode = MODE_PF2;
     }
     else{
-      state = MODE_AF;
+      mode = MODE_AF;
     }
 
   //Put delay to start? 
@@ -115,10 +115,10 @@ void loop() {
   delay(2500);
   myservo.write(180);
   delay(2500);*/
-  switch(state){
-    case PF1: principleFunction1();
-    case PF2: principleFunction2();
-    case AF: AF();
+  switch(mode){
+    case MODE_PF1: principleFunction1();
+    case MODE_PF2: principleFunction2();
+    case MODE_AF: additionalFunctionality();
   }  
   /*
   for (int i=0; i<200; i+=5){
@@ -185,6 +185,13 @@ void principleFunction1(){
 void principleFunction2() {
   updateOpticalSensors();
   updateDrive();
+}
+
+/*
+ * additional functionality allows user to control robot remotely via bluetooth using keyboard input or hand tracking
+ */
+void additionalFunctionality(){
+  
 }
 
 /*
