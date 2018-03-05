@@ -36,6 +36,8 @@ const int OPTICAL_SENSOR_PIN1 = A3;
 
 double leftLastMillis;
 double rightLastMillis;
+int rightRPM = 0;
+int leftRPM = 0;
 
 double distToCenter = 3;
 
@@ -400,20 +402,33 @@ float receiveHCSR04(int echoPin){
 
 /*
 void updateLeftHE() {
-  double timeChange = millis() - leftLastMillis;
-  leftLastMillis = millis();
-  Serial.print("LEFT HE ");
-  Serial.println(calcTireSpeed(timeChange));
-  leftTireSpeed = calcTireSpeed(timeChange);
+  leftRPM++;
+  if (leftRPM > 3) {
+    double timeChange = millis() - leftLastMillis;
+    leftLastMillis = millis();
+    Serial.print("LEFT HE ");
+    Serial.println(calcTireSpeed(timeChange));
+    leftTireSpeed = calcTireSpeed(timeChange);
+    leftRPM = 0;
+  }
+  
+  
+  
 }
 
 void updateRightHE() {
-  double timeChange = millis() - rightLastMillis;
-  rightLastMillis = millis();
-  Serial.print("RIGHT HE ");
-  Serial.println(calcTireSpeed(timeChange));
-  rightTireSpeed = calcTireSpeed(timeChange);
-}*/
+/*
+  rightRPM++;
+  if (rightRPM > 3) {
+    double timeChange = millis() - rightLastMillis;
+    rightLastMillis = millis();
+    Serial.print("RIGHT HE ");
+    Serial.println(calcTireSpeed(timeChange));
+    rightTireSpeed = calcTireSpeed(timeChange);
+    rightRPM = 0;
+  }
+}
+*/
 
 double calcTireSpeed(double time) {
   return (distToCenter * PI) / (time / 1000);
