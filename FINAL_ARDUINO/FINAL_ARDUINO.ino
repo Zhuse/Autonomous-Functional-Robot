@@ -40,9 +40,9 @@ const int MOTOR_POLARITY_PIN_RIGHT = 7; //M1 (right wheel), HIGH is forward
 const int OPTICAL_SENSOR_PIN0 = A2;
 const int OPTICAL_SENSOR_PIN1 = A3;
 
-//Pins for DIP Switch //TODO CHANGE THIS
-const int DIP_PIN1 = 99999999999;
-const int DIP_PIN2 = 99999999999;
+//Pins for DIP Switch 
+const int DIP_PIN1 = A4;
+const int DIP_PIN2 = A5;
 
 //Pins for Hall Effect
 const int RIGHT_HE_PIN = 2;
