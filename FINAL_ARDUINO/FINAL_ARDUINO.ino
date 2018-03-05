@@ -1,10 +1,10 @@
- #include <SPI.h>
+#include <SPI.h>
 #include <Servo.h>
 #include <LiquidCrystal.h>
 
 /* Member variables */
 float currTemp;
-float currDist = 400;
+float currDist;
 float speedSound; //Speed of sound based on current temp
 float currSpeed = 0;
 float leftTireSpeed = 0;
@@ -76,8 +76,8 @@ void setup() {
   pinMode(OPTICAL_SENSOR_PIN0, INPUT);
   pinMode(OPTICAL_SENSOR_PIN1, INPUT);
 
-  attachInterrupt(digitalPinToInterrupt(LEFT_HE_PIN), updateLeftHE, RISING);
-  attachInterrupt(digitalPinToInterrupt(RIGHT_HE_PIN), updateRightHE, RISING);
+  //attachInterrupt(digitalPinToInterrupt(LEFT_HE_PIN), updateLeftHE, RISING);
+  //attachInterrupt(digitalPinToInterrupt(RIGHT_HE_PIN), updateRightHE, RISING);
 
   lcd.begin(16, 2); //Setup LCD num of cols and rows
   updateLCD();
@@ -114,7 +114,14 @@ void loop() {
     case MODE_PF2: principleFunction2();
     case MODE_AF: additionalFunctionality();
   }  */
-  principleFunction1();
+  Serial.println(getDist());
+  //Serial.println(readHCSR04(HC_SR04_TRIG_PIN, HC_SR04_ECHO_PIN));
+  delay(500);
+  myservo.write(0);
+  delay(250);
+  myservo.write(180);
+  delay(250);
+  //principleFunction1();
 }
 
 /**
@@ -245,6 +252,7 @@ void setForwardSpeed(int speed) {
   //Calibrate:
   analogWrite(MOTOR_POWER_PIN_LEFT, speed);
   analogWrite(MOTOR_POWER_PIN_RIGHT, speed);
+  /*
   while (leftTireSpeed < rightTireSpeed) {
     analogWrite(MOTOR_POWER_PIN_RIGHT, speed -= 5);
     delay(50);
@@ -252,7 +260,7 @@ void setForwardSpeed(int speed) {
   while (rightTireSpeed < leftTireSpeed) {
     analogWrite(MOTOR_POWER_PIN_LEFT, speed -= 5);
     delay(50);
-  }
+  }*/
 
   currSpeed = speed;
   //updateLCD();
@@ -351,19 +359,19 @@ float getLMTemp(int PIN) {
 }
 
 /**
-   Initiates and takes a reading from the HC-SR04.
-   Returns a distance to detected object in cm.
-   If no object is detected returns 400 (max range of device)
-*/
-float readHCSR04(int trigPin, int echoPin) {
+ * Initiates and takes a reading from the HC-SR04.
+ * Returns a distance to detected object in cm.
+ * If no object is detected returns 400 (max range of device)
+ */
+float readHCSR04(int trigPin, int echoPin){
   initiateHCSR04(trigPin);
   return receiveHCSR04(echoPin);
 }
 
 /**
-   Procedure to initiate HC SR04 sensor reading
-*/
-void initiateHCSR04(int trigPin) {
+ * Procedure to initiate HC SR04 sensor reading
+ */
+void initiateHCSR04(int trigPin){  
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
 
@@ -374,24 +382,25 @@ void initiateHCSR04(int trigPin) {
 }
 
 /**
-   Procedure to receive response from HC SR04 sensor reading and return distance in cm
-   Will return -1 if no obstacle is detected
-*/
-float receiveHCSR04(int echoPin) {
+ * Procedure to receive response from HC SR04 sensor reading and return distance in cm
+ * Will return -1 if no obstacle is detected
+ */
+float receiveHCSR04(int echoPin){
   unsigned long pulseDuration;
   unsigned long timeOutDuration;
 
   timeOutDuration = 36000;
   pulseDuration = pulseIn(echoPin, HIGH, timeOutDuration);
 
-  if (pulseDuration == 0) { //If echo pulse times out, no obstacle is detected
+  if (pulseDuration == 0){ //If echo pulse times out, no obstacle is detected
     return 400;
   }
   else {
-    return pulseDuration / (20000.0 / speedSound); //Return distance otherwise
+    return pulseDuration/(20000.0/speedSound); //Return distance otherwise
   }
 }
 
+/*
 void updateLeftHE() {
   leftRPM++;
   if (leftRPM > 3) {
@@ -408,6 +417,7 @@ void updateLeftHE() {
 }
 
 void updateRightHE() {
+/*
   rightRPM++;
   if (rightRPM > 3) {
     double timeChange = millis() - rightLastMillis;
@@ -418,6 +428,7 @@ void updateRightHE() {
     rightRPM = 0;
   }
 }
+*/
 
 double calcTireSpeed(double time) {
   return (distToCenter * PI) / (time / 1000);
