@@ -1,6 +1,7 @@
 #include <SPI.h>
 #include <Servo.h>
 #include <LiquidCrystal.h>
+#include <SoftwareSerial.h>
 
 /* Member variables */
 float currTemp;
@@ -47,6 +48,9 @@ const int DIP_PIN2 = 99999999999;
 const int RIGHT_HE_PIN = 2;
 const int LEFT_HE_PIN = 3;
 
+const int RX_PIN = 0;
+const int TX_PIN = 1;
+
 const int MAX_SPEED = 255; //Max motor speed
 
 /*Hall effect */
@@ -64,10 +68,12 @@ const int RIGHT_BWD = LOW;
 const int LCD_PIN = 10;
 
 Servo myservo;  // create servo object to control a servo
+SoftwareSerial mySerial(RX_PIN, TX_PIN);
 //LiquidCrystal lcd(LCD_PIN); //setup lcd (CAUSES ISSUES WITH DISTANCE SENSOR)
 
 void setup() {
   Serial.begin(9600);
+  mySerial.begin(9600);
   pinMode(LM35_PIN, INPUT);
   pinMode(HC_SR04_TRIG_PIN, OUTPUT);
   pinMode(HC_SR04_ECHO_PIN, INPUT);
@@ -97,16 +103,16 @@ void setup() {
 
 void loop() {
   //Read DIP pins after each loop of some PF
-  if (!digitalRead(DIP_PIN1) && !digitalRead(DIP_PIN2)){
+  if (!digitalRead(DIP_PIN1) && !digitalRead(DIP_PIN2)) {
     principleFunction1();
   }
-  else if (digitalRead(DIP_PIN1) && !digitalRead(DIP_PIN2)){
+  else if (digitalRead(DIP_PIN1) && !digitalRead(DIP_PIN2)) {
     principleFunction2();
   }
-  else if (!digitalRead(DIP_PIN1) && digitalRead(DIP_PIN2)){
+  else if (!digitalRead(DIP_PIN1) && digitalRead(DIP_PIN2)) {
     principleFunction3();
   }
-  else{
+  else {
     stopRobot();
   }
 }
@@ -189,15 +195,24 @@ void principleFunction3() {
   }
   else if (up) {
     setForwardSpeed(255);
+    digitalWrite(13, HIGH);
+    delay(250);
+    digitalWrite(13, LOW);
   }
   else if (down) {
     setForwardSpeed(-255);
   }
   else if (left) {
     stationaryLeftTurn();
+    digitalWrite(13, HIGH);
+    delay(666);
+    digitalWrite(13, LOW);
   }
   else if (right) {
     stationaryRightTurn();
+    digitalWrite(13, HIGH);
+    delay(1250);
+    digitalWrite(13, LOW);
   }
   else {
     stopRobot();
@@ -208,22 +223,23 @@ void principleFunction3() {
    Gets instruction code from processing for PF3
 */
 void getProcessingCommand() {
-  int instruction = 0;
-  while (true) {
-    if (Serial.available() > 0) {
-      instruction = (int)Serial.read();
-      while (instruction >= 100000) { //Reduce instruction to 5 digits
-        instruction /= 10;
-      }
-      up = instruction / 10000;
-      down = instruction / 1000 % 10;
-      left = instruction / 100 % 10;
-      right = instruction / 10 % 10;
-      gear = instruction % 10;
-
-      return;
+  String command = "";
+  if (mySerial.available()) {
+    while (mySerial.available()) { // While there is more to be read, keep reading.
+      command += (char)mySerial.read();
     }
+    Serial.println(command);
+    command = ""; // No repeats
   }
+  int instruction = command.toInt();
+  while (instruction >= 100000) { //Reduce instruction to 5 digits
+    instruction /= 10;
+  }
+  up = instruction / 10000;
+  down = instruction / 1000 % 10;
+  left = instruction / 100 % 10;
+  right = instruction / 10 % 10;
+  gear = instruction % 10;
 }
 
 /*
