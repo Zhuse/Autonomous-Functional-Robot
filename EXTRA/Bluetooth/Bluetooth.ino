@@ -8,28 +8,28 @@
   //Password for bluetooth: 1234
 //3
   //To receive, connect your serial terminal program to COM5
-
+#include <SoftwareSerial.h>
+SoftwareSerial BT(0,1);
 String message; //string that stores the incoming message
 
 void setup()
 {
-  Serial.begin(9600); //set baud rate
+  BT.begin(9600); //set baud rate
 }
 
 void loop()
 {
-  digitalWrite(13, LOW);
-  while(Serial.available())
+  while(BT.available())
   {//while there is data available on the serial monitor
-    message+=char(Serial.read());//store string from serial command
+    message+=char(BT.read());//store string from serial command
   }
-  if(!Serial.available())
+  if(!BT.available())
   {
     if(message!="")
     {//if data is available
-      digitalWrite(13, HIGH);//show the data
+      BT.println(message); //show the data
       message=""; //clear the data
     }
   }
-  delay(500); //delay
+  delay(5000); //delay
 }
