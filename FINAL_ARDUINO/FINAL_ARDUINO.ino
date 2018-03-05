@@ -46,13 +46,13 @@ const int LCD_D6 = 4;
 const int LCD_D7 = 5;
 
 //Pins for DIP Switch //TODO CHANGE THIS
-const int DIP_1 = 1; 
+const int DIP_1 = 1;
 const int DIP_2 = 2;
 const int DIP_3 = 3;
-int state;  //decide which principle function to run on setup(). 0 for PF1, 1 for PF2, 2 for AF
+int mode;  //decide which principle function to run on setup(). 0 for PF1, 1 for PF2, 2 for AF
 const int PF1 = 0;
 const int PF2 = 1;
-const int PF3 = 2;
+const int AF = 2;
 
 Servo myservo;  // create servo object to control a servo
 LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7); //setup lcd
@@ -85,6 +85,27 @@ void setup() {
   analogWrite(MOTOR_POWER_PIN2, 0);
   //digitalWrite(MOTOR_POLARITY_PIN2, HIGH);
 
+  //check dip switch status and set mode appropriately. Only DIP_1 on for PF1, Only DIP_2 on for PF2, Only DIP_3 on for AF
+  //error check for unsupported dip switch input
+  while(digitalRead(DIP_1) && digitalRead(DIP_2) && digitalRead(DIP_3) 
+    || digitalRead(DIP_1) && digitalRead(DIP_2) 
+    || digitalRead(DIP_2) && digitalRead(DIP_3) 
+    || digitalRead(DIP_1) && digitalRead(DIP_3)){
+      //TODO print error message to LCD
+      
+      delay(500);
+    }
+
+    if(digitalRead(DIP_1)){
+      state = PF1;
+    }
+    else if(digitalRead(DIP_2){
+      state = PF2;
+    }
+    else{
+      state = AF;
+    }
+
   //Put delay to start? 
 }
 
@@ -94,9 +115,11 @@ void loop() {
   delay(2500);
   myservo.write(180);
   delay(2500);*/
-
-  principleFunction1();
-  
+  switch(state){
+    case PF1: principleFunction1();
+    case PF2: principleFunction2();
+    case AF: AF();
+  }  
   /*
   for (int i=0; i<200; i+=5){
     setForwardSpeed(i);
@@ -136,7 +159,6 @@ void principleFunction1(){
       setForwardSpeed(forwardSpeed);
     }
   }
-  stopRobot();
   myservo.write(180); //Check left
   delay(500);
   float leftDist = getDist();
@@ -216,15 +238,6 @@ void updateLCD(){
   lcd.print("SPEED: ");
   lcd.setCursor(7, 1);
   lcd.print(currSpeed);
-}
-
-/**
- * Stops movement in the robot
- */
-void stopRobot(){
-  analogWrite(MOTOR_POWER_PIN1, 0);
-  analogWrite(MOTOR_POWER_PIN2, 0);
-  currSpeed = 0;
 }
 
 /**
