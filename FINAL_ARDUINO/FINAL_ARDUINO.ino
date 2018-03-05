@@ -39,6 +39,10 @@ const int MOTOR_POLARITY_PIN_RIGHT = 7; //M1 (right wheel), HIGH is forward
 const int OPTICAL_SENSOR_PIN0 = A2;
 const int OPTICAL_SENSOR_PIN1 = A3;
 
+//Pins for DIP Switch //TODO CHANGE THIS
+const int DIP_PIN1 = 99999999999;
+const int DIP_PIN2 = 99999999999;
+
 //Pins for Hall Effect
 const int RIGHT_HE_PIN = 2;
 const int LEFT_HE_PIN = 3;
@@ -59,15 +63,6 @@ const int RIGHT_BWD = LOW;
 
 const int LCD_PIN = 10;
 
-//Pins for DIP Switch //TODO CHANGE THIS
-const int DIP_1 = 1;
-const int DIP_2 = 2;
-const int DIP_3 = 3;
-int mode;  //decides which principle function to run on setup(). 0 for PF1, 1 for PF2, 2 for AF
-const int MODE_PF1 = 0;
-const int MODE_PF2 = 1;
-const int MODE_AF = 2;
-
 Servo myservo;  // create servo object to control a servo
 //LiquidCrystal lcd(LCD_PIN); //setup lcd (CAUSES ISSUES WITH DISTANCE SENSOR)
 
@@ -80,6 +75,8 @@ void setup() {
   myservo.write(servoPos); //set servo position to mid
   pinMode(MOTOR_POLARITY_PIN_LEFT, OUTPUT); //Direction
   pinMode(MOTOR_POLARITY_PIN_RIGHT, OUTPUT); //Direction
+  pinMode(DIP_PIN1, INPUT);
+  pinMode(DIP_PIN2, INPUT);
 
   pinMode(RIGHT_HE_PIN, INPUT_PULLUP);
   pinMode(LEFT_HE_PIN, INPUT_PULLUP);
@@ -96,44 +93,22 @@ void setup() {
   // Set initial rotation speed to 0
   analogWrite(MOTOR_POWER_PIN_LEFT, 0);
   analogWrite(MOTOR_POWER_PIN_RIGHT, 0);
-
-  //check dip switch status and set mode appropriately. Only DIP_1 on for PF1, Only DIP_2 on for PF2, Only DIP_3 on for AF
-  //error check for unsupported dip switch input
-  /*
-    while (digitalRead(DIP_1) && digitalRead(DIP_2) && digitalRead(DIP_3)
-         || digitalRead(DIP_1) && digitalRead(DIP_2)
-         || digitalRead(DIP_2) && digitalRead(DIP_3)
-         || digitalRead(DIP_1) && digitalRead(DIP_3)) {
-    //TODO print error message to LCD
-
-    if(digitalRead(DIP_1)){
-      mode = MODE_PF1;
-    }
-    else if(digitalRead(DIP_2)){
-      mode = MODE_PF2;
-    }
-    else{
-      mode = MODE_AF;
-    }
-    }*/
 }
 
 void loop() {
-  /*
-    switch(mode){
-    case MODE_PF1: principleFunction1();
-    case MODE_PF2: principleFunction2();
-    case MODE_AF: additionalFunctionality();
-    }  */
-  /*
-    Serial.print("DIST: ");
-    Serial.println(getDist());
-    delay(500);
-    myservo.write(0);
-    delay(250);
-    myservo.write(180);
-    delay(250);*/
-  principleFunction1();
+  //Read DIP pins after each loop of some PF
+  if (!digitalRead(DIP_PIN1) && !digitalRead(DIP_PIN2)){
+    principleFunction1();
+  }
+  else if (digitalRead(DIP_PIN1) && !digitalRead(DIP_PIN2)){
+    principleFunction2();
+  }
+  else if (!digitalRead(DIP_PIN1) && digitalRead(DIP_PIN2)){
+    principleFunction3();
+  }
+  else{
+    stopRobot();
+  }
 }
 
 /**
