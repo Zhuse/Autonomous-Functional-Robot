@@ -54,8 +54,8 @@ void setup() {
   pinMode(RIGHT_HE_PIN, INPUT_PULLUP);
   pinMode(LEFT_HE_PIN, INPUT_PULLUP);
 
-  attachInterrupt(digitalPinToInterrupt(LEFT_HE_PIN), updateLeftHE, RISING);
-  attachInterrupt(digitalPinToInterrupt(RIGHT_HE_PIN), updateRightHE, RISING);
+  //attachInterrupt(digitalPinToInterrupt(LEFT_HE_PIN), updateLeftHE, RISING);
+  //attachInterrupt(digitalPinToInterrupt(RIGHT_HE_PIN), updateRightHE, RISING);
 
   lcd.begin(16, 2); //Setup LCD num of cols and rows
   updateLCD();
@@ -76,7 +76,9 @@ void loop() {
   myservo.write(180);
   delay(2500);*/
 
-  principleFunction1();
+  //principleFunction1();
+  Serial.println(getDist());
+  delay(1000);
   
   /*
   for (int i=0; i<200; i+=5){

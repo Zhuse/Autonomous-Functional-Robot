@@ -58,7 +58,7 @@ const int MODE_PF2 = 1;
 const int MODE_AF = 2;
 
 Servo myservo;  // create servo object to control a servo
-LiquidCrystal lcd(LCD_PIN); //setup lcd
+//LiquidCrystal lcd(LCD_PIN); //setup lcd (CAUSES ISSUES WITH DISTANCE SENSOR)
 
 void setup() {
   Serial.begin(9600);
@@ -76,11 +76,11 @@ void setup() {
   pinMode(OPTICAL_SENSOR_PIN0, INPUT);
   pinMode(OPTICAL_SENSOR_PIN1, INPUT);
 
-  //attachInterrupt(digitalPinToInterrupt(LEFT_HE_PIN), updateLeftHE, RISING);
-  //attachInterrupt(digitalPinToInterrupt(RIGHT_HE_PIN), updateRightHE, RISING);
+  attachInterrupt(digitalPinToInterrupt(LEFT_HE_PIN), updateLeftHE, RISING);
+  attachInterrupt(digitalPinToInterrupt(RIGHT_HE_PIN), updateRightHE, RISING);
 
-  lcd.begin(16, 2); //Setup LCD num of cols and rows
-  updateLCD();
+  //lcd.begin(16, 2); //Setup LCD num of cols and rows
+  //updateLCD();
 
   // Set initial rotation speed to 0
   analogWrite(MOTOR_POWER_PIN_LEFT, 0);
@@ -89,7 +89,7 @@ void setup() {
   //check dip switch status and set mode appropriately. Only DIP_1 on for PF1, Only DIP_2 on for PF2, Only DIP_3 on for AF
   //error check for unsupported dip switch input
   /*
-  while (digitalRead(DIP_1) && digitalRead(DIP_2) && digitalRead(DIP_3)
+    while (digitalRead(DIP_1) && digitalRead(DIP_2) && digitalRead(DIP_3)
          || digitalRead(DIP_1) && digitalRead(DIP_2)
          || digitalRead(DIP_2) && digitalRead(DIP_3)
          || digitalRead(DIP_1) && digitalRead(DIP_3)) {
@@ -104,24 +104,25 @@ void setup() {
     else{
       mode = MODE_AF;
     }
-  }*/
+    }*/
 }
 
 void loop() {
   /*
-  switch(mode){
+    switch(mode){
     case MODE_PF1: principleFunction1();
     case MODE_PF2: principleFunction2();
     case MODE_AF: additionalFunctionality();
-  }  */
-  Serial.println(getDist());
-  //Serial.println(readHCSR04(HC_SR04_TRIG_PIN, HC_SR04_ECHO_PIN));
-  delay(500);
-  myservo.write(0);
-  delay(250);
-  myservo.write(180);
-  delay(250);
-  //principleFunction1();
+    }  */
+  /*
+    Serial.print("DIST: ");
+    Serial.println(getDist());
+    delay(500);
+    myservo.write(0);
+    delay(250);
+    myservo.write(180);
+    delay(250);*/
+  principleFunction1();
 }
 
 /**
@@ -131,24 +132,25 @@ void loop() {
    Robot checks left and right using servo and then chooses side with most space and repeats
 */
 void principleFunction1() {
-  while (getDist() > 10) {
-    if (currDist > 50) {
+  while (getDist() > 5) {
+    if (currDist > 25) {
       //Max speed, set currSpeed
-      Serial.print("Dist:");
-      Serial.println(currDist);
+      //Serial.print("Dist:");
+      //Serial.println(currDist);
       setForwardSpeed(255);
     }
-    else if (currDist > 10) {
-      Serial.print("Dist:");
-      Serial.println(currDist);
+    else {
+      //Serial.print("Dist:");
+      //Serial.println(currDist);
 
       //Change speed as a function of distance
-      int forwardSpeed = 255.0 - currDist * 25.5;
-      Serial.print("SPEED: ");
-      Serial.println(forwardSpeed);
-      setForwardSpeed(forwardSpeed);
+      //int forwardSpeed = 255.0 - currDist * 25.5;
+      //Serial.print("SPEED: ");
+      //Serial.println(forwardSpeed);
+      setForwardSpeed(150);
     }
   }
+  setForwardSpeed(0);
   myservo.write(180); //Check left
   delay(500);
   float leftDist = getDist();
@@ -178,15 +180,15 @@ void principleFunction2() {
 }
 
 /*
- * additional functionality allows user to control robot remotely via bluetooth using keyboard input or hand tracking
- */
-void additionalFunctionality(){
-  
+   additional functionality allows user to control robot remotely via bluetooth using keyboard input or hand tracking
+*/
+void additionalFunctionality() {
+
 }
 
 /*
- * Updates PF2 motor speeds depending on current optical sensor readings
- */
+   Updates PF2 motor speeds depending on current optical sensor readings
+*/
 void updateDrive() {
   if (!opticalSensors[0] && !opticalSensors[1]) {
     setForwardSpeed(255);
@@ -227,14 +229,15 @@ void updateLCD() {
     return; //Do not update more than once a second
 
   timer = millis();
-  lcd.clear();
-  lcd.print("DIST: ");
-  lcd.setCursor(6, 0);
-  lcd.print(currDist);
-  lcd.setCursor(0, 1);
-  lcd.print("SPEED: ");
-  lcd.setCursor(7, 1);
-  lcd.print(currSpeed);
+  /*
+    lcd.clear();
+    lcd.print("DIST: ");
+    lcd.setCursor(6, 0);
+    lcd.print(currDist);
+    lcd.setCursor(0, 1);
+    lcd.print("SPEED: ");
+    lcd.setCursor(7, 1);
+    lcd.print(currSpeed);*/
 }
 
 /**
@@ -253,15 +256,17 @@ void setForwardSpeed(int speed) {
   analogWrite(MOTOR_POWER_PIN_LEFT, speed);
   analogWrite(MOTOR_POWER_PIN_RIGHT, speed);
   /*
-  while (leftTireSpeed < rightTireSpeed) {
-    analogWrite(MOTOR_POWER_PIN_RIGHT, speed -= 5);
-    delay(50);
-  }
-  while (rightTireSpeed < leftTireSpeed) {
-    analogWrite(MOTOR_POWER_PIN_LEFT, speed -= 5);
-    delay(50);
-  }*/
-
+    if (leftTireSpeed < rightTireSpeed)
+      while (leftTireSpeed < rightTireSpeed) {
+        analogWrite(MOTOR_POWER_PIN_RIGHT, speed -= 1);
+        delay(10);
+      }
+    else
+      while (rightTireSpeed < leftTireSpeed) {
+        analogWrite(MOTOR_POWER_PIN_LEFT, speed -= 1);
+        delay(10);
+      }
+  */
   currSpeed = speed;
   //updateLCD();
 }
@@ -316,7 +321,7 @@ void stationaryLeftTurn() {
   digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_FWD);
   analogWrite(MOTOR_POWER_PIN_LEFT, 255); //Left wheel
   analogWrite(MOTOR_POWER_PIN_RIGHT, 255); //Right wheel
-  delay(5000);
+  delay(1000);
 
   analogWrite(MOTOR_POWER_PIN_LEFT, 0);
   analogWrite(MOTOR_POWER_PIN_RIGHT, 0);
@@ -334,7 +339,7 @@ void stationaryRightTurn() {
   digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_BWD);
   analogWrite(MOTOR_POWER_PIN_LEFT, 255);
   analogWrite(MOTOR_POWER_PIN_RIGHT, 255);
-  delay(5000);
+  delay(1000);
 
   analogWrite(MOTOR_POWER_PIN_LEFT, 0);
   analogWrite(MOTOR_POWER_PIN_RIGHT, 0);
@@ -346,6 +351,8 @@ void stationaryRightTurn() {
 */
 float getDist() {
   currTemp = getLMTemp(LM35_PIN);
+  Serial.print("Curr temp:");
+  Serial.println(currTemp);
   speedSound = 331.5 + (0.6 * currTemp);
   currDist = readHCSR04(HC_SR04_TRIG_PIN, HC_SR04_ECHO_PIN);
   return currDist;
@@ -359,19 +366,19 @@ float getLMTemp(int PIN) {
 }
 
 /**
- * Initiates and takes a reading from the HC-SR04.
- * Returns a distance to detected object in cm.
- * If no object is detected returns 400 (max range of device)
- */
-float readHCSR04(int trigPin, int echoPin){
+   Initiates and takes a reading from the HC-SR04.
+   Returns a distance to detected object in cm.
+   If no object is detected returns 400 (max range of device)
+*/
+float readHCSR04(int trigPin, int echoPin) {
   initiateHCSR04(trigPin);
   return receiveHCSR04(echoPin);
 }
 
 /**
- * Procedure to initiate HC SR04 sensor reading
- */
-void initiateHCSR04(int trigPin){  
+   Procedure to initiate HC SR04 sensor reading
+*/
+void initiateHCSR04(int trigPin) {
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
 
@@ -382,25 +389,25 @@ void initiateHCSR04(int trigPin){
 }
 
 /**
- * Procedure to receive response from HC SR04 sensor reading and return distance in cm
- * Will return -1 if no obstacle is detected
- */
-float receiveHCSR04(int echoPin){
+   Procedure to receive response from HC SR04 sensor reading and return distance in cm
+   Will return -1 if no obstacle is detected
+*/
+float receiveHCSR04(int echoPin) {
   unsigned long pulseDuration;
   unsigned long timeOutDuration;
 
   timeOutDuration = 36000;
   pulseDuration = pulseIn(echoPin, HIGH, timeOutDuration);
 
-  if (pulseDuration == 0){ //If echo pulse times out, no obstacle is detected
+  if (pulseDuration == 0) { //If echo pulse times out, no obstacle is detected
     return 400;
   }
   else {
-    return pulseDuration/(20000.0/speedSound); //Return distance otherwise
+    return pulseDuration / (20000.0 / speedSound); //Return distance otherwise
   }
 }
 
-/*
+
 void updateLeftHE() {
   leftRPM++;
   if (leftRPM > 3) {
@@ -411,13 +418,10 @@ void updateLeftHE() {
     leftTireSpeed = calcTireSpeed(timeChange);
     leftRPM = 0;
   }
-  
-  
-  
 }
 
 void updateRightHE() {
-/*
+
   rightRPM++;
   if (rightRPM > 3) {
     double timeChange = millis() - rightLastMillis;
@@ -428,7 +432,7 @@ void updateRightHE() {
     rightRPM = 0;
   }
 }
-*/
+
 
 double calcTireSpeed(double time) {
   return (distToCenter * PI) / (time / 1000);
