@@ -1,3 +1,4 @@
+#include <SPI.h>
 #include <Servo.h>
 #include <LiquidCrystal.h>
 
@@ -38,12 +39,7 @@ double rightLastMillis;
 
 double distToCenter = 3;
 
-const int LCD_RS = 0;
-const int LCD_EN = 1;
-const int LCD_D4 = 2;
-const int LCD_D5 = 3;
-const int LCD_D6 = 4;
-const int LCD_D7 = 5;
+const int LCD_PIN = 10;
 
 //Pins for DIP Switch //TODO CHANGE THIS
 const int DIP_1 = 1;
@@ -55,7 +51,7 @@ const int MODE_PF2 = 1;
 const int MODE_AF = 2;
 
 Servo myservo;  // create servo object to control a servo
-LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7); //setup lcd
+LiquidCrystal lcd(LCD_PIN); //setup lcd
 
 void setup() {
   Serial.begin(9600);
@@ -102,7 +98,7 @@ void setup() {
     else{
       mode = MODE_AF;
     }
-//Put delay to start?
+  }
 }
 
 void loop() {
