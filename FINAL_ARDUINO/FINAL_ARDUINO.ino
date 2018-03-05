@@ -229,8 +229,6 @@ void getProcessingCommand() {
     while (mySerial.available()) { // While there is more to be read, keep reading.
       command += (char)mySerial.read();
     }
-    Serial.println(command);
-    command = ""; // No repeats
   }
   int instruction = command.toInt();
   while (instruction >= 100000) { //Reduce instruction to 5 digits
@@ -241,6 +239,19 @@ void getProcessingCommand() {
   left = instruction / 100 % 10;
   right = instruction / 10 % 10;
   gear = instruction % 10;
+
+  //Alternate implementation in case above doesn't work
+//    String command = "";
+//  if (mySerial.available()) {
+//    while (mySerial.available()) { // While there is more to be read, keep reading.
+//      command += (char)mySerial.read();
+//    }
+//  }
+//    up = command.substring(0,1).toInt();
+//    down = command.substring(1,2).toInt();
+//    left = command.substring(2,3).toInt();
+//    right = command.substring(3,4).toInt();
+//    gear = command.substring(4,5).toInt();  
 }
 
 /*
