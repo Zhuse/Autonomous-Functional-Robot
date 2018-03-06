@@ -1,6 +1,4 @@
-#include <SPI.h>
 #include <Servo.h>
-//#include <LiquidCrystal595.h>
 #include <SoftwareSerial.h>
 
 /* Member variables */
@@ -40,6 +38,10 @@ const int MOTOR_POLARITY_PIN_RIGHT = 7; //M1 (right wheel), HIGH is forward
 const int OPTICAL_SENSOR_PIN0 = A2;
 const int OPTICAL_SENSOR_PIN1 = A3;
 
+const int DATA_PIN = 8;
+const int LATCH_PIN = 9;
+const int CLOCK_PIN = 10;
+
 //Pins for DIP Switch
 const int DIP_PIN1 = A4;
 const int DIP_PIN2 = A5;
@@ -52,6 +54,48 @@ const int RX_PIN = 0;
 const int TX_PIN = 1;
 
 const int MAX_SPEED = 255; //Max motor speed
+
+/*Characters encodings for LCD*/
+const byte LCD_0 = B00110000;
+const byte LCD_1 = B00110001;
+const byte LCD_2 = B00110010;
+const byte LCD_3 = B00110011;
+const byte LCD_4 = B00110100;
+const byte LCD_5 = B00110101;
+const byte LCD_6 = B00110110;
+const byte LCD_7 = B00110111;
+const byte LCD_8 = B00111000;
+const byte LCD_9 = B00111001;
+const byte LCD_A = B01000001;
+const byte LCD_B = B01000010;
+const byte LCD_C = B01000011;
+const byte LCD_D = B01000100;
+const byte LCD_E = B01000101;
+const byte LCD_F = B01000110;
+const byte LCD_G = B01000111;
+const byte LCD_H = B01001000;
+const byte LCD_I = B01001001;
+const byte LCD_J = B01001010;
+const byte LCD_K = B01001011;
+const byte LCD_L = B01001100;
+const byte LCD_M = B01001101;
+const byte LCD_N = B01001110;
+const byte LCD_O = B01001111;
+const byte LCD_P = B01010000;
+const byte LCD_Q = B01010001;
+const byte LCD_R = B01010010;
+const byte LCD_S = B01010011;
+const byte LCD_T = B01010100;
+const byte LCD_U = B01010101;
+const byte LCD_V = B01010110;
+const byte LCD_W = B01010111;
+const byte LCD_X = B01011000;
+const byte LCD_Y = B01011001;
+const byte LCD_Z = B01011010;
+const byte LCD_SPACE = B00100000;
+const byte LCD_DASH = B00101101;
+const byte LCD_EXCLMARK = B00100001;
+const byte LCD_COLON = B00111010;
 
 /*Hall effect */
 double leftLastMillis;
@@ -69,13 +113,8 @@ const int LCD_DATA_PIN = 9;
 const int LCD_LATCH_PIN = 10;
 const int LCD_CLOCK_PIN = 11;
 
-
-int stationaryDelay = 35;
-
-
 Servo myservo;  // create servo object to control a servo
 SoftwareSerial BT(TX_PIN, RX_PIN);
-//LiquidCrystal595 lcd(LCD_DATA_PIN, LCD_LATCH_PIN, LCD_CLOCK_PIN); //setup lcd
 
 void setup() {
   Serial.begin(9600);
@@ -96,15 +135,19 @@ void setup() {
   pinMode(OPTICAL_SENSOR_PIN0, INPUT);
   pinMode(OPTICAL_SENSOR_PIN1, INPUT);
 
+  //For shift reg for LCD
+  pinMode(LATCH_PIN, OUTPUT);
+  pinMode(DATA_PIN, OUTPUT);
+  pinMode(CLOCK_PIN, OUTPUT);
+
   attachInterrupt(digitalPinToInterrupt(LEFT_HE_PIN), updateLeftHE, RISING);
   attachInterrupt(digitalPinToInterrupt(RIGHT_HE_PIN), updateRightHE, RISING);
-
-//  lcd.begin(16, 2); //Setup LCD num of cols and rows
- // updateLCD();
 
   // Set initial rotation speed to 0
   analogWrite(MOTOR_POWER_PIN_LEFT, 0);
   analogWrite(MOTOR_POWER_PIN_RIGHT, 0);
+
+  initializeLCD();
 }
 
 void loop() {
@@ -148,8 +191,10 @@ void principleFunction1() {
       //Serial.println(forwardSpeed);
       setForwardSpeed(150);
     }
+    updateLCD(1, currSpeed);
   }
   setForwardSpeed(0);
+  updateLCD(1, currSpeed);
   myservo.write(180); //Check left
   delay(500);
   float leftDist = getDist();
@@ -161,11 +206,13 @@ void principleFunction1() {
   if (leftDist > rightDist) {
     Serial.println("LEFT IS CLEAR");
     stationaryLeftTurn();
+    delay(35);
     //Turn left 90 degrees
   }
   else {
     Serial.println("RIGHT IS CLEAR");
     stationaryRightTurn();
+    delay(35);
     //Turn right 90 degrees
   }
   stopRobot();
@@ -177,6 +224,7 @@ void principleFunction1() {
 void principleFunction2() {
   updateOpticalSensors();
   updateDrive();
+  updateLCD(2, currSpeed);
 }
 
 /*
@@ -222,6 +270,7 @@ void principleFunction3() {
   else {
     stopRobot();
   }
+  updateLCD(3, currSpeed);
 }
 
 /*
@@ -238,48 +287,48 @@ void getProcessingCommand() {
   while (instruction >= 100000) { //Reduce instruction to 5 digits
     instruction /= 10;
   }
-  switch(instruction){
-      case 0:
-        BT.println("OFF");
-        break;
-      case 16: 
-        BT.println("UP");
-        break;
-      case 242:
-        BT.println("DOWN-RIGHT");
-        break;
-      case 100:
-        BT.println("LEFT");
-        break;
-      case 10: 
-        BT.println("RIGHT");
-        break;
-      case 232:
-        BT.println("DOWN");
-        break;
-      case 76:
-        BT.println("DOWN-LEFT");
-        break;
-      case 116: 
-        BT.println("UP-LEFT");
-        break;
-      case 26:
-        BT.println("UP-RIGHT");
-        break;
-      default: break;
-    } 
+  switch (instruction) {
+    case 0:
+      BT.println("OFF");
+      break;
+    case 16:
+      BT.println("UP");
+      break;
+    case 242:
+      BT.println("DOWN-RIGHT");
+      break;
+    case 100:
+      BT.println("LEFT");
+      break;
+    case 10:
+      BT.println("RIGHT");
+      break;
+    case 232:
+      BT.println("DOWN");
+      break;
+    case 76:
+      BT.println("DOWN-LEFT");
+      break;
+    case 116:
+      BT.println("UP-LEFT");
+      break;
+    case 26:
+      BT.println("UP-RIGHT");
+      break;
+    default: break;
+  }
   //Alternate implementation in case above doesn't work
-//    String command = "";
-//  if (BT.available()) {
-//    while (BT.available()) { // While there is more to be read, keep reading.
-//      command += (char)BT.read();
-//    }
-//  }
-//    up = command.substring(0,1).toInt();
-//    down = command.substring(1,2).toInt();
-//    left = command.substring(2,3).toInt();
-//    right = command.substring(3,4).toInt();
-//    gear = command.substring(4,5).toInt();  
+  //    String command = "";
+  //  if (BT.available()) {
+  //    while (BT.available()) { // While there is more to be read, keep reading.
+  //      command += (char)BT.read();
+  //    }
+  //  }
+  //    up = command.substring(0,1).toInt();
+  //    down = command.substring(1,2).toInt();
+  //    left = command.substring(2,3).toInt();
+  //    right = command.substring(3,4).toInt();
+  //    gear = command.substring(4,5).toInt();
 }
 
 /*
@@ -351,26 +400,6 @@ void updateOpticalSensors() {
 }
 
 /**
-   Updates the LCD display reading given the current speed of the robot (in the member variable)
-   and the mode it's in
-*/
-void updateLCD() {
-  /*
-  if (millis() - timer < 100)
-    return; //Do not update more than once a second
-  timer = millis();*/
-/*
-//  lcd.clear();
-//  lcd.print("DIST: ");
-  lcd.setCursor(6, 0);
-  lcd.print(currDist);
-  lcd.setCursor(0, 1);
-  lcd.print("SPEED: ");
-  lcd.setCursor(7, 1);
-  lcd.print(currSpeed); */
-}
-
-/**
    Turns motors such that both wheels go in forward direction
    Changes currspeed to speed that we set forward speed to
    Speed should be an int between -255 and 255 (MAX_SPEED)
@@ -400,7 +429,6 @@ void setForwardSpeed(int speed) {
         analogWrite(MOTOR_POWER_PIN_LEFT, speed -= 1);
         delay(10);
       }*/
-  //updateLCD();
 }
 
 /*
@@ -447,13 +475,11 @@ void movingRightTurn(int speed) {
 */
 void stationaryLeftTurn() {
   currSpeed = 0;
-  //updateLCD();
 
   digitalWrite(MOTOR_POLARITY_PIN_LEFT, LEFT_BWD);
   digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_FWD);
   analogWrite(MOTOR_POWER_PIN_LEFT, MAX_SPEED); //Left wheel
   analogWrite(MOTOR_POWER_PIN_RIGHT, MAX_SPEED); //Right wheel
-  delay(stationaryDelay);
   /*
     delay(1000);
     analogWrite(MOTOR_POWER_PIN_LEFT, 0);
@@ -466,14 +492,11 @@ void stationaryLeftTurn() {
 */
 void stationaryRightTurn() {
   currSpeed = 0;
-  //updateLCD();
 
   digitalWrite(MOTOR_POLARITY_PIN_LEFT, LEFT_FWD);
   digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_BWD);
   analogWrite(MOTOR_POWER_PIN_LEFT, MAX_SPEED);
   analogWrite(MOTOR_POWER_PIN_RIGHT, MAX_SPEED);
-  delay(stationaryDelay);
-
   /*
     delay(1000);
     analogWrite(MOTOR_POWER_PIN_LEFT, 0);
@@ -586,3 +609,134 @@ double calcTireSpeed(double time) {
   return (distToCenter * PI) / (time / 1000);
 }
 
+/*
+   Update the LCD values for mode and speed
+*/
+void updateLCD(int mode, int speed) {
+  LCD_Write(B10001111, 0); //Set cursor to end of first line
+  writeDigitLCD(mode);
+  if (speed<0){
+    LCD_Write(B11000110, 0); //Sets cursor to second line
+    LCD_Write(LCD_DASH, 1);
+    speed = abs(speed);
+  }
+  else{
+    LCD_Write(B11000111, 0); //Sets cursor to second line
+  }
+  int speedDigits[9];
+  for (int i = 0; i < 9; i++) {
+    speedDigits[i] = speed % 10;
+    speed /= 10;
+  }
+  for (int i = 8; i >= 0; i--) {
+    writeDigitLCD(speedDigits[i]);
+  }
+}
+
+/*
+   Write some digit to the LCD at the position the cursor is at
+*/
+void writeDigitLCD(int digit) {
+  switch (digit) {
+    case 1:
+      LCD_Write(LCD_1, 1);
+      break;
+    case 2:
+      LCD_Write(LCD_2, 1);
+      break;
+    case 3:
+      LCD_Write(LCD_3, 1);
+      break;
+    case 4:
+      LCD_Write(LCD_4, 1);
+      break;
+    case 5:
+      LCD_Write(LCD_5, 1);
+      break;
+    case 6:
+      LCD_Write(LCD_6, 1);
+      break;
+    case 7:
+      LCD_Write(LCD_7, 1);
+      break;
+    case 8:
+      LCD_Write(LCD_8, 1);
+      break;
+    case 9:
+      LCD_Write(LCD_9, 1);
+      break;
+    default:
+      LCD_Write(LCD_0, 1);
+      break;
+  }
+}
+
+/**
+   Initialize the LCD with proper procedure and also relevant labels of "Mode:" and "Speed:"
+*/
+void initializeLCD() {
+  delay(15);
+  LCD_Write(0x03, 0); //Function set (8 bits)
+  delay(5);
+  LCD_Write(0x03, 0); //Function Set (8 bits)
+  delay(1);
+  LCD_Write(0x03, 0); //Function Set (8 bits) (BF can be checked after this)
+  LCD_Write(0x02, 0); //Function set (4 bits) (0010 0000)
+  LCD_Write(0x028, 0); //Function Set (Specify 2 display lines) (0010 1000)
+  LCD_Write(0x10, 0); //Display off (0000 1000)
+  LCD_Write(0x0C, 0); //Display clear (0000 0001)
+  LCD_Write(0x06, 0); //Entry mode set (Increment and shift to right) (0000 0111)
+
+  LCD_Write(LCD_M, 1);
+  LCD_Write(LCD_O, 1);
+  LCD_Write(LCD_D, 1);
+  LCD_Write(LCD_E, 1);
+  LCD_Write(LCD_COLON, 1);
+
+  //Print SPEED:
+  LCD_Write(B11000000, 0); //Sets cursor to second line
+  LCD_Write(LCD_S, 1);
+  LCD_Write(LCD_P, 1);
+  LCD_Write(LCD_E, 1);
+  LCD_Write(LCD_E, 1);
+  LCD_Write(LCD_D, 1);
+  LCD_Write(LCD_COLON, 1);
+}
+
+/**
+   Send some command to the LCD
+   Value represents D7-D0 (in bits) and RSval represents RS pin (is 0 or 1)
+*/
+void LCD_Write(byte value, int RSval) {
+  byte dataIn = (value >> 4) & B1111; //Set first half of data
+  dataIn += (RSval << 4); //Set RS bit (E bit is implicitly low)
+  //Serial.println(dataIn, BIN);
+  updateShiftRegister(dataIn);
+  pulseE(dataIn);
+  dataIn = (value & B1111); //Send 2nd half of data
+  dataIn += (RSval << 4);
+  updateShiftRegister(dataIn);
+  pulseE(dataIn);
+}
+
+/**
+   Pulse implementation for E pin for shift register
+   existingData is data that we want to pulse (D7-D4 + RS)
+*/
+void pulseE(byte existingData) {
+  delay(0.5);
+  updateShiftRegister(B100000 | existingData);
+  delay(0.5);
+  updateShiftRegister(existingData);
+  delay(0.5);
+}
+
+/**
+   Update the shift register
+   DataIn is in format: RS, E, D7, D6, D5, D4 (MSB FIRST)
+*/
+void updateShiftRegister(byte dataIn) {
+  digitalWrite(LATCH_PIN, LOW);
+  shiftOut(DATA_PIN, CLOCK_PIN, MSBFIRST, dataIn); //MSBFIRST
+  digitalWrite(LATCH_PIN, HIGH);
+}
