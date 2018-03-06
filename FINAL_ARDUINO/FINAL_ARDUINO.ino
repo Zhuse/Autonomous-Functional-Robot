@@ -1,6 +1,6 @@
 #include <SPI.h>
 #include <Servo.h>
-#include <LiquidCrystal595.h>
+//#include <LiquidCrystal595.h>
 #include <SoftwareSerial.h>
 
 /* Member variables */
@@ -45,8 +45,8 @@ const int DIP_PIN1 = A4;
 const int DIP_PIN2 = A5;
 
 //Pins for Hall Effect
-const int RIGHT_HE_PIN = 2;
-const int LEFT_HE_PIN = 3;
+const int RIGHT_HE_PIN = 3;
+const int LEFT_HE_PIN = 2;
 
 const int RX_PIN = 0;
 const int TX_PIN = 1;
@@ -71,7 +71,7 @@ const int LCD_CLOCK_PIN = 11;
 
 Servo myservo;  // create servo object to control a servo
 SoftwareSerial BT(TX_PIN, RX_PIN);
-LiquidCrystal595 lcd(LCD_DATA_PIN, LCD_LATCH_PIN, LCD_CLOCK_PIN); //setup lcd
+//LiquidCrystal595 lcd(LCD_DATA_PIN, LCD_LATCH_PIN, LCD_CLOCK_PIN); //setup lcd
 
 void setup() {
   Serial.begin(9600);
@@ -95,8 +95,8 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(LEFT_HE_PIN), updateLeftHE, RISING);
   attachInterrupt(digitalPinToInterrupt(RIGHT_HE_PIN), updateRightHE, RISING);
 
-  lcd.begin(16, 2); //Setup LCD num of cols and rows
-  updateLCD();
+//  lcd.begin(16, 2); //Setup LCD num of cols and rows
+ // updateLCD();
 
   // Set initial rotation speed to 0
   analogWrite(MOTOR_POWER_PIN_LEFT, 0);
@@ -157,13 +157,13 @@ void principleFunction1() {
   if (leftDist > rightDist) {
     Serial.println("LEFT IS CLEAR");
     stationaryLeftTurn();
-    delay(1000);
+    delay(35);
     //Turn left 90 degrees
   }
   else {
     Serial.println("RIGHT IS CLEAR");
     stationaryRightTurn();
-    delay(1000);
+    delay(35);
     //Turn right 90 degrees
   }
   stopRobot();
@@ -357,15 +357,15 @@ void updateLCD() {
   if (millis() - timer < 100)
     return; //Do not update more than once a second
   timer = millis();*/
-
-  lcd.clear();
-  lcd.print("DIST: ");
+/*
+//  lcd.clear();
+//  lcd.print("DIST: ");
   lcd.setCursor(6, 0);
   lcd.print(currDist);
   lcd.setCursor(0, 1);
   lcd.print("SPEED: ");
   lcd.setCursor(7, 1);
-  lcd.print(currSpeed); 
+  lcd.print(currSpeed); */
 }
 
 /**
