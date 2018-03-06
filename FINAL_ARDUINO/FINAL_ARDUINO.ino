@@ -190,7 +190,7 @@ void principleFunction1() {
       setForwardSpeed(MAX_SPEED / 5);
     }
   }
-  setForwardSpeed(0);
+  stopRobot();
   myservo.write(180); //Check left
   delay(1000);
   float leftDist = getDist();
@@ -410,7 +410,7 @@ void setForwardSpeed(int speed) {
   currSpeed = speed; //Set member var to speed with sign
   speed = abs(speed);
   analogWrite(MOTOR_POWER_PIN_LEFT, speed);
-  analogWrite(MOTOR_POWER_PIN_RIGHT, speed);
+  analogWrite(MOTOR_POWER_PIN_RIGHT, speed-4);
   //Calibrate with HE:
   /*
     if (leftTireSpeed + 100 < rightTireSpeed)
