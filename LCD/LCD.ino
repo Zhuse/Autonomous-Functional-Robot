@@ -53,52 +53,62 @@ void setup() {
 }
 
 void loop() {
-  displayYouWon();
-  displayInvalidInput();
+  for (int i=0; i<50000; i++){
+    updateSpeed(i);
+    delay(100);
+  }
 }
 
-/**
-   Displays "YOU WON!" on LCD
-*/
-void displayYouWon() {
+void updateSpeed(int speed) {
   LCD_Write(0x01, 0); //Clear display
-  delay(500);
-  LCD_Write(B10000000, 0); //Sets cursor to home
-  LCD_Write(LCD_Y, 1);
-  LCD_Write(LCD_O, 1);
-  LCD_Write(LCD_U, 1);
-  LCD_Write(LCD_SPACE, 1);
-  LCD_Write(LCD_W, 1);
-  LCD_Write(LCD_O, 1);
-  LCD_Write(LCD_N, 1);
-  LCD_Write(LCD_EXCLMARK, 1);
-  delay(1000);
+  delay(100);
+  LCD_Write(LCD_S,1);
+  LCD_Write(LCD_P,1);
+  LCD_Write(LCD_E,1);
+  LCD_Write(LCD_E,1);
+  LCD_Write(LCD_D,1);
+  LCD_Write(LCD_COLON,1);
+  LCD_Write(B11000000,0); //Sets cursor to second line
+  int speedDigits[6];
+  for (int i = 0; i < 6; i++) {
+    speedDigits[i] = speed % 10;
+    speed /= 10;
+  }
+  for (int i = 5; i >= 0; i--) {
+    switch (speedDigits[i]) {
+      case 1:
+        LCD_Write(LCD_1, 1);
+        break;
+      case 2:
+        LCD_Write(LCD_2, 1);
+        break;
+      case 3:
+        LCD_Write(LCD_3, 1);
+        break;
+      case 4:
+        LCD_Write(LCD_4, 1);
+        break;
+      case 5:
+        LCD_Write(LCD_5, 1);
+        break;
+      case 6:
+        LCD_Write(LCD_6, 1);
+        break;
+      case 7:
+        LCD_Write(LCD_7, 1);
+        break;
+      case 8:
+        LCD_Write(LCD_8, 1);
+        break;
+      case 9:
+        LCD_Write(LCD_9, 1);
+        break;
+      default:
+        LCD_Write(LCD_0, 1);
+        break;
+    }
+  }
 }
-
-/**
-   Displays "INVALID INPUT!" on LCD
-*/
-void displayInvalidInput() {
-  LCD_Write(0x01, 0); //Clear display
-  delay(500);
-  LCD_Write(B10000000, 0); //Sets cursor to home
-  LCD_Write(LCD_I, 1);
-  LCD_Write(LCD_N, 1);
-  LCD_Write(LCD_V, 1);
-  LCD_Write(LCD_A, 1);
-  LCD_Write(LCD_L, 1);
-  LCD_Write(LCD_I, 1);
-  LCD_Write(LCD_D, 1);
-  LCD_Write(LCD_SPACE, 1);
-  LCD_Write(LCD_I, 1);
-  LCD_Write(LCD_N, 1);
-  LCD_Write(LCD_P, 1);
-  LCD_Write(LCD_U, 1);
-  LCD_Write(LCD_T, 1);
-  LCD_Write(LCD_EXCLMARK, 1);
-  delay(1000);
-}
-
 
 void initialize_LCD() {
   delay(15);
@@ -139,10 +149,5 @@ void updateShiftRegister(byte dataIn) {
   digitalWrite(latchPin, LOW);
   shiftOut(dataPin, clockPin, MSBFIRST, dataIn); //MSBFIRST
   digitalWrite(latchPin, HIGH);
-  /*
-  Serial.print(dataIn, BIN);
-  Serial.print("    ");
-  Serial.print(digitalRead(6));
-  Serial.println(digitalRead(7));*/
 }
 
