@@ -69,6 +69,10 @@ const int LCD_DATA_PIN = 9;
 const int LCD_LATCH_PIN = 10;
 const int LCD_CLOCK_PIN = 11;
 
+
+int stationaryDelay = 35;
+
+
 Servo myservo;  // create servo object to control a servo
 SoftwareSerial BT(TX_PIN, RX_PIN);
 //LiquidCrystal595 lcd(LCD_DATA_PIN, LCD_LATCH_PIN, LCD_CLOCK_PIN); //setup lcd
@@ -157,13 +161,11 @@ void principleFunction1() {
   if (leftDist > rightDist) {
     Serial.println("LEFT IS CLEAR");
     stationaryLeftTurn();
-    delay(35);
     //Turn left 90 degrees
   }
   else {
     Serial.println("RIGHT IS CLEAR");
     stationaryRightTurn();
-    delay(35);
     //Turn right 90 degrees
   }
   stopRobot();
@@ -451,6 +453,7 @@ void stationaryLeftTurn() {
   digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_FWD);
   analogWrite(MOTOR_POWER_PIN_LEFT, MAX_SPEED); //Left wheel
   analogWrite(MOTOR_POWER_PIN_RIGHT, MAX_SPEED); //Right wheel
+  delay(stationaryDelay);
   /*
     delay(1000);
     analogWrite(MOTOR_POWER_PIN_LEFT, 0);
@@ -469,6 +472,8 @@ void stationaryRightTurn() {
   digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_BWD);
   analogWrite(MOTOR_POWER_PIN_LEFT, MAX_SPEED);
   analogWrite(MOTOR_POWER_PIN_RIGHT, MAX_SPEED);
+  delay(stationaryDelay);
+
   /*
     delay(1000);
     analogWrite(MOTOR_POWER_PIN_LEFT, 0);
