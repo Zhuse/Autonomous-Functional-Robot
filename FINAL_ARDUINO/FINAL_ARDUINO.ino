@@ -113,10 +113,6 @@ const int LCD_DATA_PIN = 9;
 const int LCD_LATCH_PIN = 10;
 const int LCD_CLOCK_PIN = 11;
 
-
-int stationaryDelay = 35;
-
-
 Servo myservo;  // create servo object to control a servo
 SoftwareSerial BT(TX_PIN, RX_PIN);
 
@@ -195,8 +191,10 @@ void principleFunction1() {
       //Serial.println(forwardSpeed);
       setForwardSpeed(150);
     }
+    updateLCD(1, currSpeed);
   }
   setForwardSpeed(0);
+  updateLCD(1, currSpeed);
   myservo.write(180); //Check left
   delay(500);
   float leftDist = getDist();
@@ -208,11 +206,13 @@ void principleFunction1() {
   if (leftDist > rightDist) {
     Serial.println("LEFT IS CLEAR");
     stationaryLeftTurn();
+    delay(35);
     //Turn left 90 degrees
   }
   else {
     Serial.println("RIGHT IS CLEAR");
     stationaryRightTurn();
+    delay(35);
     //Turn right 90 degrees
   }
   stopRobot();
@@ -224,6 +224,7 @@ void principleFunction1() {
 void principleFunction2() {
   updateOpticalSensors();
   updateDrive();
+  updateLCD(2, currSpeed);
 }
 
 /*
@@ -269,6 +270,7 @@ void principleFunction3() {
   else {
     stopRobot();
   }
+  updateLCD(3, currSpeed);
 }
 
 /*
@@ -478,7 +480,6 @@ void stationaryLeftTurn() {
   digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_FWD);
   analogWrite(MOTOR_POWER_PIN_LEFT, MAX_SPEED); //Left wheel
   analogWrite(MOTOR_POWER_PIN_RIGHT, MAX_SPEED); //Right wheel
-  delay(stationaryDelay);
   /*
     delay(1000);
     analogWrite(MOTOR_POWER_PIN_LEFT, 0);
@@ -496,8 +497,6 @@ void stationaryRightTurn() {
   digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_BWD);
   analogWrite(MOTOR_POWER_PIN_LEFT, MAX_SPEED);
   analogWrite(MOTOR_POWER_PIN_RIGHT, MAX_SPEED);
-  delay(stationaryDelay);
-
   /*
     delay(1000);
     analogWrite(MOTOR_POWER_PIN_LEFT, 0);
@@ -616,7 +615,14 @@ double calcTireSpeed(double time) {
 void updateLCD(int mode, int speed) {
   LCD_Write(B10001111, 0); //Set cursor to end of first line
   writeDigitLCD(mode);
-  LCD_Write(B11000111, 0); //Sets cursor to second line
+  if (speed<0){
+    LCD_Write(B11000110, 0); //Sets cursor to second line
+    LCD_Write(LCD_DASH, 1);
+    speed = abs(speed);
+  }
+  else{
+    LCD_Write(B11000111, 0); //Sets cursor to second line
+  }
   int speedDigits[9];
   for (int i = 0; i < 9; i++) {
     speedDigits[i] = speed % 10;
