@@ -15,7 +15,7 @@ int opticalSensors[] = {0, 0};
 int THRESHOLD = 600;
 int lastAdjustment = 0; //0 for left 1 for right
 int delayCount = 0;
-const int increaseAmount = 30;
+const int increaseAmount = 20;
 const int MAX_SPEED = 170;//200; //Max motor speed
 const int reduceAmount = 140;//160;
 const int maxDelayCount = 70;
@@ -192,12 +192,12 @@ void loop() {
    Robot checks left and right using servo and then chooses side with most space and repeats
 */
 void principleFunction1() {
-  while (getDist() > 25) {
-    if (currDist > 200) {
+  while (getDist() > 10) {
+    if (currDist > 50) {
       setForwardSpeed(MAX_SPEED);
     }
-    else if (currDist > 100) {
-      setForwardSpeed(MAX_SPEED / 3);
+    else if (currDist > 25) {
+      setForwardSpeed(MAX_SPEED / 2);
     }
     else {
       setForwardSpeed(MAX_SPEED / 5);
