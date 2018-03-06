@@ -8,9 +8,7 @@ float speedSound; //Speed of sound based on current temp
 float currSpeed = 0;
 float leftTireSpeed = 0;
 float rightTireSpeed = 0;
-int servoPos = 90; // variable to store the servo position (90 deg is middle position)
 unsigned long lcdTimer = 0;
-unsigned long lcdResetTimer = 0;
 
 /* PF2 stuff */
 int opticalSensors[] = {0, 0};
@@ -30,19 +28,24 @@ int right = 0;
 int gear = 1;
 
 /* Constant Pin Assignments */
+
+//Pins for distance sensor
 const int LM35_PIN = A0;
 const int SERVO_PIN = A1;
 const int HC_SR04_TRIG_PIN = 12;
 const int HC_SR04_ECHO_PIN = 13;
 
+//Pins for motor
 const int MOTOR_POWER_PIN_LEFT = 5; //E1 (left wheel speed)
 const int MOTOR_POLARITY_PIN_LEFT = 4; //M1 (left wheel) , LOW is forward
 const int MOTOR_POWER_PIN_RIGHT = 6; //E1 (right wheel speed)
 const int MOTOR_POLARITY_PIN_RIGHT = 7; //M1 (right wheel), HIGH is forward
 
+//Pins for optical sensor
 const int OPTICAL_SENSOR_PIN0 = A2;
 const int OPTICAL_SENSOR_PIN1 = A3;
 
+//Pins for shift register
 const int DATA_PIN = 11;
 const int LATCH_PIN = 10;
 const int CLOCK_PIN = 9;
@@ -55,6 +58,7 @@ const int DIP_PIN2 = A5;
 const int RIGHT_HE_PIN = 2;
 const int LEFT_HE_PIN = 3;
 
+//Pins for bluetooth
 const int RX_PIN = 0;
 const int TX_PIN = 1;
 
@@ -107,6 +111,7 @@ int rightRPM = 0;
 int leftRPM = 0;
 double distToCenter = 3;
 
+/* Encodings for motor polarities */
 const int LEFT_FWD = HIGH;
 const int LEFT_BWD = LOW;
 const int RIGHT_FWD = HIGH;
@@ -116,21 +121,25 @@ Servo myservo;  // create servo object to control a servo
 SoftwareSerial BT(TX_PIN, RX_PIN);
 
 void setup() {
-  //Serial.begin(9600);
   BT.begin(9600);
+
+  //For distance sensor related pins
   pinMode(LM35_PIN, INPUT);
   pinMode(HC_SR04_TRIG_PIN, OUTPUT);
   pinMode(HC_SR04_ECHO_PIN, INPUT);
-  myservo.attach(SERVO_PIN);
-  myservo.write(servoPos); //set servo position to mid
+
   pinMode(MOTOR_POLARITY_PIN_LEFT, OUTPUT); //Direction
   pinMode(MOTOR_POLARITY_PIN_RIGHT, OUTPUT); //Direction
+
+  //For DIP Switch
   pinMode(DIP_PIN1, INPUT);
   pinMode(DIP_PIN2, INPUT);
 
+  //For hall effect
   pinMode(RIGHT_HE_PIN, INPUT_PULLUP);
   pinMode(LEFT_HE_PIN, INPUT_PULLUP);
 
+  //For optical sensor
   pinMode(OPTICAL_SENSOR_PIN0, INPUT);
   pinMode(OPTICAL_SENSOR_PIN1, INPUT);
 
@@ -139,35 +148,37 @@ void setup() {
   pinMode(DATA_PIN, OUTPUT);
   pinMode(CLOCK_PIN, OUTPUT);
 
+  //For Servo
+  myservo.attach(SERVO_PIN);
+  myservo.write(90); //set servo position to mid
+
+  //Setup hall effect interrupts (to update speed)
   attachInterrupt(digitalPinToInterrupt(LEFT_HE_PIN), updateLeftHE, RISING);
   attachInterrupt(digitalPinToInterrupt(RIGHT_HE_PIN), updateRightHE, RISING);
 
-  // Set initial rotation speed to 0
+  // Set initial rotation speed of motors to 0
   analogWrite(MOTOR_POWER_PIN_LEFT, 0);
   analogWrite(MOTOR_POWER_PIN_RIGHT, 0);
 
+  //LCD initialization procedure
   initializeLCD();
 }
 
 void loop() {
   //Read DIP pins after each loop of some PF
   if (!digitalRead(DIP_PIN1) && !digitalRead(DIP_PIN2)) {
-    //resetLCD();
     updateLCDMode(0);
     stopRobot();
   }
   else if (digitalRead(DIP_PIN1) && !digitalRead(DIP_PIN2)) {
-    //resetLCD();
     updateLCDMode(2);
     principleFunction2();
   }
   else if (!digitalRead(DIP_PIN1) && digitalRead(DIP_PIN2)) {
-    //resetLCD();
     updateLCDMode(1);
     principleFunction1();
   }
   else {
-    //resetLCD();
     updateLCDMode(3);
     stopRobot();
     principleFunction3();
@@ -204,16 +215,16 @@ void principleFunction1() {
   if (leftDist > rightDist) {
     Serial.println("LEFT IS CLEAR");
     stationaryLeftTurn();
-    delay(40);
+    delay(300);
     //Turn left 90 degrees
   }
   else {
     Serial.println("RIGHT IS CLEAR");
     stationaryRightTurn();
-    delay(40);
+    delay(330);
     //Turn right 90 degrees
   }
-  //stopRobot();
+  stopRobot();
 }
 
 /*
@@ -331,18 +342,6 @@ void getProcessingCommand() {
     command = ""; // No repeats
     delay(10);
   }
-  //Alternate implementation in case above doesn't work
-  //    String command = "";
-  //  if (BT.available()) {
-  //    while (BT.available()) { // While there is more to be read, keep reading.
-  //      command += (char)BT.read();
-  //    }
-  //  }
-  //    up = command.substring(0,1).toInt();
-  //    down = command.substring(1,2).toInt();
-  //    left = command.substring(2,3).toInt();
-  //    right = command.substring(3,4).toInt();
-  //    gear = command.substring(4,5).toInt();
 }
 
 /*
@@ -423,18 +422,6 @@ void setForwardSpeed(int speed) {
   speed = abs(speed);
   analogWrite(MOTOR_POWER_PIN_LEFT, speed);
   analogWrite(MOTOR_POWER_PIN_RIGHT, speed - 4);
-  //Calibrate with HE:
-  /*
-    if (leftTireSpeed + 100 < rightTireSpeed)
-    while (leftTireSpeed < rightTireSpeed) {
-      analogWrite(MOTOR_POWER_PIN_RIGHT, speed -= 1);
-      delay(10);
-    }
-    else if (leftTireSpeed > rightTireSpeed + 100)
-    while (rightTireSpeed < leftTireSpeed) {
-      analogWrite(MOTOR_POWER_PIN_LEFT, speed -= 1);
-      delay(10);
-    }*/
 }
 
 /*
@@ -486,10 +473,6 @@ void stationaryLeftTurn() {
   digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_FWD);
   analogWrite(MOTOR_POWER_PIN_LEFT, MAX_SPEED); //Left wheel
   analogWrite(MOTOR_POWER_PIN_RIGHT, MAX_SPEED); //Right wheel
-  /*
-    delay(1000);
-    analogWrite(MOTOR_POWER_PIN_LEFT, 0);
-    analogWrite(MOTOR_POWER_PIN_RIGHT, 0);*/
 }
 
 /**
@@ -503,10 +486,6 @@ void stationaryRightTurn() {
   digitalWrite(MOTOR_POLARITY_PIN_RIGHT, RIGHT_BWD);
   analogWrite(MOTOR_POWER_PIN_LEFT, MAX_SPEED);
   analogWrite(MOTOR_POWER_PIN_RIGHT, MAX_SPEED);
-  /*
-    delay(1000);
-    analogWrite(MOTOR_POWER_PIN_LEFT, 0);
-    analogWrite(MOTOR_POWER_PIN_RIGHT, 0);*/
 }
 
 /**
@@ -624,7 +603,7 @@ double calcTireSpeed(double time) {
     return 0;
   }
   BT.println((distToCenter * PI) / (time / 1000)); //Prints to LCD
-  return (distToCenter * PI) / (time / 1000); 
+  return (distToCenter * PI) / (time / 1000);
 }
 
 /*
@@ -698,20 +677,6 @@ void writeDigitLCD(int digit) {
     default:
       LCD_Write(LCD_0, 1);
       break;
-  }
-}
-
-/*
-   Resets LCD mode and speed (clears screen and reprints)
-*/
-void resetLCD() {
-  if (millis() - lcdResetTimer >= 5000) {
-    LCD_Write(0x01, 0); //Clear Display
-    printLCDMode();  //Print MODE:
-    printLCDSpeed();  //Print SPEED:
-    //updateLCDMode(mode);
-    //updateLCDSpeed(speed);
-    lcdResetTimer = millis();
   }
 }
 
