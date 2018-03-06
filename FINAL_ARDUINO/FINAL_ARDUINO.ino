@@ -148,7 +148,7 @@ void setup() {
 }
 
 void loop() {
-  /*//Read DIP pins after each loop of some PF
+  //Read DIP pins after each loop of some PF
   if (!digitalRead(DIP_PIN1) && !digitalRead(DIP_PIN2)) {
     //resetLCD();
     updateLCDMode(0);
@@ -168,9 +168,8 @@ void loop() {
     //resetLCD();
     updateLCDMode(3);
     stopRobot();
-    //principleFunction3();
-  }*/
-  principleFunction3();
+    principleFunction3();
+  }
 }
 
 /**
@@ -278,56 +277,48 @@ String command = "";
         right = 0;
         break;
       case 16: 
-        BT.println("UP");
         up = 1;
         down = 0;
         left = 0;
         right = 0;
         break;
       case 242:
-        BT.println("DOWN-RIGHT");
         up = 0;
         down = 1;
         left = 0;
         right = 1;
         break;
       case 100:
-        BT.println("LEFT");
         up = 0;
         down = 0;
         left = 1;
         right = 0;
         break;
       case 10: 
-        BT.println("RIGHT");
         up = 0;
         down = 0;
         left = 0;
         right = 1;
         break;
       case 232:
-        BT.println("DOWN");
         up = 0;
         down = 1;
         left = 0;
         right = 0;
         break;
       case 76:
-        BT.println("DOWN-LEFT");
         up = 0;
         down = 1;
         left = 1;
         right = 0;
         break;
       case 116: 
-        BT.println("UP-LEFT");
         up = 1;
         down = 0;
         left = 1;
         right = 0;
         break;
       case 26:
-        BT.println("UP-RIGHT");
         up = 1;
         down = 0;
         left = 0;
@@ -634,7 +625,11 @@ void updateRightHE() {
    Calculate tire speeds using hall effect sensors
 */
 double calcTireSpeed(double time) {
-  if (time > 1000) return 0;
+  if (time > 1000){
+    BT.println((distToCenter * PI) / (time / 1000));
+    return 0;
+  }
+  BT.println((distToCenter * PI) / (time / 1000));
   return (distToCenter * PI) / (time / 1000);
 }
 
