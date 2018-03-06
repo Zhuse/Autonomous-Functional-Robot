@@ -116,3 +116,12 @@ void updateShiftRegister(byte dataIn) {
   digitalWrite(latchPin, HIGH);
 }
 
+void printDigits(int number){
+    if(number < 10){
+        //print "number" to LCD
+    }
+    else{
+        printDigits(number / 10);
+        //print "number % 10" to LCD
+    }
+}
