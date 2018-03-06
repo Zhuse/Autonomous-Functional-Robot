@@ -1,6 +1,6 @@
-int dataPin = 9;
-int latchPin = 10;
-int clockPin = 11;
+int dataPin = 8;
+int latchPin = 9;
+int clockPin = 10;
 
 /*Characters encodings for LCD*/
 const byte LCD_0 = B00110000;
@@ -54,6 +54,7 @@ void setup() {
 
 void loop() {
   displayYouWon();
+  displayInvalidInput();
 }
 
 /**
@@ -71,7 +72,33 @@ void displayYouWon() {
   LCD_Write(LCD_O, 1);
   LCD_Write(LCD_N, 1);
   LCD_Write(LCD_EXCLMARK, 1);
+  delay(1000);
 }
+
+/**
+   Displays "INVALID INPUT!" on LCD
+*/
+void displayInvalidInput() {
+  LCD_Write(0x01, 0); //Clear display
+  delay(500);
+  LCD_Write(B10000000, 0); //Sets cursor to home
+  LCD_Write(LCD_I, 1);
+  LCD_Write(LCD_N, 1);
+  LCD_Write(LCD_V, 1);
+  LCD_Write(LCD_A, 1);
+  LCD_Write(LCD_L, 1);
+  LCD_Write(LCD_I, 1);
+  LCD_Write(LCD_D, 1);
+  LCD_Write(LCD_SPACE, 1);
+  LCD_Write(LCD_I, 1);
+  LCD_Write(LCD_N, 1);
+  LCD_Write(LCD_P, 1);
+  LCD_Write(LCD_U, 1);
+  LCD_Write(LCD_T, 1);
+  LCD_Write(LCD_EXCLMARK, 1);
+  delay(1000);
+}
+
 
 void initialize_LCD() {
   delay(15);
@@ -88,31 +115,34 @@ void initialize_LCD() {
 }
 
 void LCD_Write(byte value, int RSval) {
-  byte dataIn = (value >> 4); //Set first half of data
-  dataIn += (RSval << 5); //Set RS bit
+  byte dataIn = (value >> 4) & B1111; //Set first half of data
+  dataIn += (RSval << 4); //Set RS bit (E bit is implicitly low)
   //Serial.println(dataIn, BIN);
   updateShiftRegister(dataIn);
   pulseE(dataIn);
   dataIn = (value & B1111); //Send 2nd half of data
-  dataIn += (RSval << 5);
+  dataIn += (RSval << 4);
   updateShiftRegister(dataIn);
   pulseE(dataIn);
 }
 
 void pulseE(byte existingData) {
   delay(0.5);
-  updateShiftRegister(B010000 | existingData);
+  updateShiftRegister(B100000 | existingData);
   delay(0.5);
-  updateShiftRegister(B000000 | existingData);
+  updateShiftRegister(existingData);
   delay(0.5);
 }
 
 //DataIn is in format: RS, E, D7, D6, D5, D4 (MSB FIRST)
 void updateShiftRegister(byte dataIn) {
   digitalWrite(latchPin, LOW);
-  Serial.println(dataIn, BIN);
-
-  shiftOut(dataPin, clockPin, LSBFIRST, dataIn); //MSBFIRST
+  shiftOut(dataPin, clockPin, MSBFIRST, dataIn); //MSBFIRST
   digitalWrite(latchPin, HIGH);
+  /*
+  Serial.print(dataIn, BIN);
+  Serial.print("    ");
+  Serial.print(digitalRead(6));
+  Serial.println(digitalRead(7));*/
 }
 
