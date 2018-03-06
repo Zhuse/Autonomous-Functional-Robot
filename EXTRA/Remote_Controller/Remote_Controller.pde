@@ -1,7 +1,7 @@
-  //import processing.serial.*; //import serial reading
+  import processing.serial.*; //import serial reading
   import de.voidplus.leapmotion.*;
 
- // Serial myPort;        // The serial port
+  Serial myPort;        // The serial port
   float distance = 0;  //current distance reading.
   float temp = 0;      //current temp reading.
   float soundSpeed = 0; //current sound speed.
@@ -72,10 +72,10 @@
     xeno = createFont("Xenotron.ttf", 32);
     
     // Open the Serial port.
-   // myPort = new Serial(this, "COM8", 9600);  //Use COM5
+    myPort = new Serial(this, "COM8", 9600);  //Use COM5
 
     // don't generate a serialEvent() unless you get a newline character:
-    //myPort.bufferUntil('\n');
+    myPort.bufferUntil('\n');
     for(int i = 0; i < 181; i++){
       Line l = new Line(0,0,0,0,0,0);
       lines.add(l);
@@ -212,8 +212,7 @@ void leapOnKeyTapGesture(KeyTapGesture g){
       yAxis();
       drawGrid();
       legend();
-      System.out.println(upUse + "" + downUse + "" + leftUse + "" + rightUse + "" + gear);
-      //myPort.write((int)(upUse * 10000 + downUse * 1000 + leftUse * 100 + rightUse * 10));
+      myPort.write((int)(upUse * 10000 + downUse * 1000 + leftUse * 100 + rightUse * 10));
       txtIns = determineIns();
       if(mode == 1){
          text(txtIns, width / 1.42, height / 1.15);
@@ -367,31 +366,19 @@ void leapOnKeyTapGesture(KeyTapGesture g){
   
   
   //Parse the data coming in from the serial port.
-  /*void serialEvent (Serial myPort) {
+  void serialEvent (Serial myPort) {
     // get the ASCII string:
     try {
     String inString = myPort.readStringUntil('\n'); //Read the values from the sensors, which are split with a space
     if (inString != null) {
       inString = trim(inString); //remove whitespace from the end of the string
-      float values[] = float(split(inString, " ")); //Split the string into sensor values
-   
-      //Parse the data
-      distance = values[0];
-      temp = values[1];
-      soundSpeed = values[2];
-      
-      //Change the mapping scale depending on the mode.
-      if(mode == 0){
-        distance = map(distance, 0, 40, 0, 400);
-      } if (mode == 1){
-        distance = map(distance, 0, 400, 0, 400);
-      }
+      System.out.println(inString);
     }
     
     //Catch any non-string inputs from the Arduino.
     } catch (Exception e){
     }
-  }*/
+  }
   
   //Draw a green circle for the radar plot.
   void radarLine(int w, int h, int radius, int thickness){
