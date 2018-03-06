@@ -114,8 +114,8 @@ Servo myservo;  // create servo object to control a servo
 SoftwareSerial BT(TX_PIN, RX_PIN);
 
 void setup() {
-  Serial.begin(9600);
-  //BT.begin(9600);
+  //Serial.begin(9600);
+  BT.begin(9600);
   pinMode(LM35_PIN, INPUT);
   pinMode(HC_SR04_TRIG_PIN, OUTPUT);
   pinMode(HC_SR04_ECHO_PIN, INPUT);
@@ -148,7 +148,7 @@ void setup() {
 }
 
 void loop() {
-  //Read DIP pins after each loop of some PF
+  /*//Read DIP pins after each loop of some PF
   if (!digitalRead(DIP_PIN1) && !digitalRead(DIP_PIN2)) {
     //resetLCD();
     updateLCDMode(0);
@@ -169,7 +169,8 @@ void loop() {
     updateLCDMode(3);
     stopRobot();
     //principleFunction3();
-  }
+  }*/
+  principleFunction3();
 }
 
 /**
@@ -243,24 +244,15 @@ void principleFunction3() {
   }
   else if (up) {
     setForwardSpeed(255);
-    digitalWrite(13, HIGH);
-    delay(250);
-    digitalWrite(13, LOW);
   }
   else if (down) {
     setForwardSpeed(-255);
   }
   else if (left) {
     stationaryLeftTurn();
-    digitalWrite(13, HIGH);
-    delay(666);
-    digitalWrite(13, LOW);
   }
   else if (right) {
     stationaryRightTurn();
-    digitalWrite(13, HIGH);
-    delay(1250);
-    digitalWrite(13, LOW);
   }
   else {
     stopRobot();
@@ -271,45 +263,80 @@ void principleFunction3() {
    Gets instruction code from processing for PF3
 */
 void getProcessingCommand() {
-  String command = "";
-  if (BT.available()) {
+String command = "";
+  int instruction = 0;
+ if (BT.available()) {
     while (BT.available()) { // While there is more to be read, keep reading.
-      command += (char)BT.read();
+      command += (int)BT.read();
     }
-  }
-  int instruction = command.toInt();
-  while (instruction >= 100000) { //Reduce instruction to 5 digits
-    instruction /= 10;
-  }
-  switch (instruction) {
-    case 0:
-      BT.println("OFF");
-      break;
-    case 16:
-      BT.println("UP");
-      break;
-    case 242:
-      BT.println("DOWN-RIGHT");
-      break;
-    case 100:
-      BT.println("LEFT");
-      break;
-    case 10:
-      BT.println("RIGHT");
-      break;
-    case 232:
-      BT.println("DOWN");
-      break;
-    case 76:
-      BT.println("DOWN-LEFT");
-      break;
-    case 116:
-      BT.println("UP-LEFT");
-      break;
-    case 26:
-      BT.println("UP-RIGHT");
-      break;
-    default: break;
+    instruction = command.toInt();  
+    switch(instruction){
+      case 0:
+        up = 0;
+        down = 0;
+        left = 0;
+        right = 0;
+        break;
+      case 16: 
+        BT.println("UP");
+        up = 1;
+        down = 0;
+        left = 0;
+        right = 0;
+        break;
+      case 242:
+        BT.println("DOWN-RIGHT");
+        up = 0;
+        down = 1;
+        left = 0;
+        right = 1;
+        break;
+      case 100:
+        BT.println("LEFT");
+        up = 0;
+        down = 0;
+        left = 1;
+        right = 0;
+        break;
+      case 10: 
+        BT.println("RIGHT");
+        up = 0;
+        down = 0;
+        left = 0;
+        right = 1;
+        break;
+      case 232:
+        BT.println("DOWN");
+        up = 0;
+        down = 1;
+        left = 0;
+        right = 0;
+        break;
+      case 76:
+        BT.println("DOWN-LEFT");
+        up = 0;
+        down = 1;
+        left = 1;
+        right = 0;
+        break;
+      case 116: 
+        BT.println("UP-LEFT");
+        up = 1;
+        down = 0;
+        left = 1;
+        right = 0;
+        break;
+      case 26:
+        BT.println("UP-RIGHT");
+        up = 1;
+        down = 0;
+        left = 0;
+        right = 1;
+        break;
+      default: break;
+    }
+    command = ""; // No repeats
+    delay(10);
   }
   //Alternate implementation in case above doesn't work
   //    String command = "";
