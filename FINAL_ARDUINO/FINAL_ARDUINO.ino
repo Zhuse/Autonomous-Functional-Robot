@@ -38,9 +38,9 @@ const int MOTOR_POLARITY_PIN_RIGHT = 7; //M1 (right wheel), HIGH is forward
 const int OPTICAL_SENSOR_PIN0 = A2;
 const int OPTICAL_SENSOR_PIN1 = A3;
 
-const int DATA_PIN = 8;
-const int LATCH_PIN = 9;
-const int CLOCK_PIN = 10;
+const int DATA_PIN = 11;
+const int LATCH_PIN = 10;
+const int CLOCK_PIN = 9;
 
 //Pins for DIP Switch
 const int DIP_PIN1 = A4;
@@ -109,10 +109,6 @@ const int LEFT_BWD = LOW;
 const int RIGHT_FWD = HIGH;
 const int RIGHT_BWD = LOW;
 
-const int LCD_DATA_PIN = 9;
-const int LCD_LATCH_PIN = 10;
-const int LCD_CLOCK_PIN = 11;
-
 Servo myservo;  // create servo object to control a servo
 SoftwareSerial BT(TX_PIN, RX_PIN);
 
@@ -153,15 +149,19 @@ void setup() {
 void loop() {
   //Read DIP pins after each loop of some PF
   if (!digitalRead(DIP_PIN1) && !digitalRead(DIP_PIN2)) {
+    updateLCDMode(0);
     stopRobot();
   }
   else if (digitalRead(DIP_PIN1) && !digitalRead(DIP_PIN2)) {
+    updateLCDMode(1);
     principleFunction1();
   }
   else if (!digitalRead(DIP_PIN1) && digitalRead(DIP_PIN2)) {
+    updateLCDMode(2);
     principleFunction2();
   }
   else {
+    updateLCDMode(3);
     stopRobot();
     //principleFunction3();
   }
@@ -191,10 +191,8 @@ void principleFunction1() {
       //Serial.println(forwardSpeed);
       setForwardSpeed(150);
     }
-    updateLCD(1, currSpeed);
   }
   setForwardSpeed(0);
-  updateLCD(1, currSpeed);
   myservo.write(180); //Check left
   delay(500);
   float leftDist = getDist();
@@ -224,7 +222,6 @@ void principleFunction1() {
 void principleFunction2() {
   updateOpticalSensors();
   updateDrive();
-  updateLCD(2, currSpeed);
 }
 
 /*
@@ -270,7 +267,6 @@ void principleFunction3() {
   else {
     stopRobot();
   }
-  updateLCD(3, currSpeed);
 }
 
 /*
@@ -584,6 +580,7 @@ void updateLeftHE() {
     Serial.println(calcTireSpeed(timeChange));
     leftTireSpeed = calcTireSpeed(timeChange);
     leftRPM = 0;
+    updateLCDSpeed((leftTireSpeed+rightTireSpeed)/2);
   }
 }
 
@@ -599,6 +596,7 @@ void updateRightHE() {
     Serial.println(calcTireSpeed(timeChange));
     rightTireSpeed = calcTireSpeed(timeChange);
     rightRPM = 0;
+    updateLCDSpeed((leftTireSpeed+rightTireSpeed)/2);
   }
 }
 
@@ -606,30 +604,40 @@ void updateRightHE() {
    Calculate tire speeds using hall effect sensors
 */
 double calcTireSpeed(double time) {
+  if (time > 1000) return 0;
   return (distToCenter * PI) / (time / 1000);
 }
 
 /*
-   Update the LCD values for mode and speed
+   Update the LCD value for mode
 */
-void updateLCD(int mode, int speed) {
+void updateLCDMode(int mode) {
   LCD_Write(B10001111, 0); //Set cursor to end of first line
   writeDigitLCD(mode);
-  if (speed<0){
-    LCD_Write(B11000110, 0); //Sets cursor to second line
-    LCD_Write(LCD_DASH, 1);
-    speed = abs(speed);
-  }
-  else{
-    LCD_Write(B11000111, 0); //Sets cursor to second line
-  }
-  int speedDigits[9];
-  for (int i = 0; i < 9; i++) {
-    speedDigits[i] = speed % 10;
-    speed /= 10;
-  }
-  for (int i = 8; i >= 0; i--) {
-    writeDigitLCD(speedDigits[i]);
+}
+
+/*
+   Update the LCD value speed
+*/
+void updateLCDSpeed(int speed) {
+  if (millis() - timer >= 1000) {
+    if (speed < 0) {
+      LCD_Write(B11000110, 0); //Sets cursor to second line
+      LCD_Write(LCD_DASH, 1);
+      speed = abs(speed);
+    }
+    else {
+      LCD_Write(B11000111, 0); //Sets cursor to second line
+    }
+    int speedDigits[9];
+    for (int i = 0; i < 9; i++) {
+      speedDigits[i] = speed % 10;
+      speed /= 10;
+    }
+    for (int i = 8; i >= 0; i--) {
+      writeDigitLCD(speedDigits[i]);
+    }
+    timer = millis();
   }
 }
 
