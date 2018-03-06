@@ -1,6 +1,6 @@
 #include <SPI.h>
 #include <Servo.h>
-#include <LiquidCrystal.h>
+#include <LiquidCrystal595.h>
 #include <SoftwareSerial.h>
 
 /* Member variables */
@@ -65,11 +65,13 @@ const int LEFT_BWD = LOW;
 const int RIGHT_FWD = HIGH;
 const int RIGHT_BWD = LOW;
 
-const int LCD_PIN = 10;
+const int LCD_DATA_PIN = 9;
+const int LCD_LATCH_PIN = 10;
+const int LCD_CLOCK_PIN = 11;
 
 Servo myservo;  // create servo object to control a servo
 SoftwareSerial mySerial(RX_PIN, TX_PIN);
-//LiquidCrystal lcd(LCD_PIN); //setup lcd (CAUSES ISSUES WITH DISTANCE SENSOR)
+LiquidCrystal595 lcd(LCD_DATA_PIN, LCD_LATCH_PIN, LCD_CLOCK_PIN); //setup lcd
 
 void setup() {
   Serial.begin(9600);
@@ -93,8 +95,8 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(LEFT_HE_PIN), updateLeftHE, RISING);
   attachInterrupt(digitalPinToInterrupt(RIGHT_HE_PIN), updateRightHE, RISING);
 
-  //lcd.begin(16, 2); //Setup LCD num of cols and rows
-  //updateLCD();
+  lcd.begin(16, 2); //Setup LCD num of cols and rows
+  updateLCD();
 
   // Set initial rotation speed to 0
   analogWrite(MOTOR_POWER_PIN_LEFT, 0);
@@ -316,19 +318,19 @@ void updateOpticalSensors() {
    and the mode it's in
 */
 void updateLCD() {
+  /*
   if (millis() - timer < 100)
     return; //Do not update more than once a second
+  timer = millis();*/
 
-  timer = millis();
-  /*
-    lcd.clear();
-    lcd.print("DIST: ");
-    lcd.setCursor(6, 0);
-    lcd.print(currDist);
-    lcd.setCursor(0, 1);
-    lcd.print("SPEED: ");
-    lcd.setCursor(7, 1);
-    lcd.print(currSpeed);*/
+  lcd.clear();
+  lcd.print("DIST: ");
+  lcd.setCursor(6, 0);
+  lcd.print(currDist);
+  lcd.setCursor(0, 1);
+  lcd.print("SPEED: ");
+  lcd.setCursor(7, 1);
+  lcd.print(currSpeed); 
 }
 
 /**
