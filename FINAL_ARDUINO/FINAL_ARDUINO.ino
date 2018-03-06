@@ -48,8 +48,8 @@ const int DIP_PIN1 = A4;
 const int DIP_PIN2 = A5;
 
 //Pins for Hall Effect
-const int RIGHT_HE_PIN = 3;
-const int LEFT_HE_PIN = 2;
+const int RIGHT_HE_PIN = 2;
+const int LEFT_HE_PIN = 3;
 
 const int RX_PIN = 0;
 const int TX_PIN = 1;
@@ -115,7 +115,7 @@ SoftwareSerial BT(TX_PIN, RX_PIN);
 
 void setup() {
   Serial.begin(9600);
-  BT.begin(9600);
+  //BT.begin(9600);
   pinMode(LM35_PIN, INPUT);
   pinMode(HC_SR04_TRIG_PIN, OUTPUT);
   pinMode(HC_SR04_ECHO_PIN, INPUT);
@@ -179,46 +179,39 @@ void loop() {
    Robot checks left and right using servo and then chooses side with most space and repeats
 */
 void principleFunction1() {
-  while (getDist() > 5) {
-    if (currDist > 25) {
-      //Max speed, set currSpeed
-      //Serial.print("Dist:");
-      //Serial.println(currDist);
+  while (getDist() > 25) {
+    if (currDist > 200) {
       setForwardSpeed(MAX_SPEED);
     }
+    else if (getDist() > 100) {
+      setForwardSpeed(MAX_SPEED / 3);
+    }
     else {
-      //Serial.print("Dist:");
-      //Serial.println(currDist);
-
-      //Change speed as a function of distance
-      //int forwardSpeed = MAX_SPEED.0 - currDist * 25.5;
-      //Serial.print("SPEED: ");
-      //Serial.println(forwardSpeed);
-      setForwardSpeed(150);
+      setForwardSpeed(MAX_SPEED / 5);
     }
   }
   setForwardSpeed(0);
   myservo.write(180); //Check left
-  delay(500);
+  delay(1000);
   float leftDist = getDist();
   myservo.write(0); //Check right
-  delay(500);
+  delay(1000);
   float rightDist = getDist();
   myservo.write(90); //Reset position
 
   if (leftDist > rightDist) {
     Serial.println("LEFT IS CLEAR");
     stationaryLeftTurn();
-    delay(35);
+    delay(40);
     //Turn left 90 degrees
   }
   else {
     Serial.println("RIGHT IS CLEAR");
     stationaryRightTurn();
-    delay(35);
+    delay(40);
     //Turn right 90 degrees
   }
-  stopRobot();
+  //stopRobot();
 }
 
 /*
@@ -421,15 +414,15 @@ void setForwardSpeed(int speed) {
   //Calibrate with HE:
   /*
     if (leftTireSpeed + 100 < rightTireSpeed)
-      while (leftTireSpeed < rightTireSpeed) {
-        analogWrite(MOTOR_POWER_PIN_RIGHT, speed -= 1);
-        delay(10);
-      }
+    while (leftTireSpeed < rightTireSpeed) {
+      analogWrite(MOTOR_POWER_PIN_RIGHT, speed -= 1);
+      delay(10);
+    }
     else if (leftTireSpeed > rightTireSpeed + 100)
-      while (rightTireSpeed < leftTireSpeed) {
-        analogWrite(MOTOR_POWER_PIN_LEFT, speed -= 1);
-        delay(10);
-      }*/
+    while (rightTireSpeed < leftTireSpeed) {
+      analogWrite(MOTOR_POWER_PIN_LEFT, speed -= 1);
+      delay(10);
+    }*/
 }
 
 /*
@@ -518,9 +511,14 @@ void stopRobot() {
    Also modifies member variables: currTemp and speedSound and currDist
 */
 float getDist() {
+  delay(100);
   currTemp = getLMTemp(LM35_PIN);
   speedSound = 331.5 + (0.6 * currTemp);
   currDist = readHCSR04(HC_SR04_TRIG_PIN, HC_SR04_ECHO_PIN);
+  Serial.print("Dist");
+  Serial.println(currDist);
+  Serial.print("Curr Temp");
+  Serial.println(currTemp);
   return currDist;
 }
 
@@ -581,8 +579,8 @@ void updateLeftHE() {
   if (leftRPM > 3) {
     double timeChange = millis() - leftLastMillis;
     leftLastMillis = millis();
-    Serial.print("LEFT HE ");
-    Serial.println(calcTireSpeed(timeChange));
+    //Serial.print("LEFT HE ");
+    //Serial.println(calcTireSpeed(timeChange));
     leftTireSpeed = calcTireSpeed(timeChange);
     leftRPM = 0;
     updateLCDSpeed((leftTireSpeed + rightTireSpeed) / 2);
@@ -597,8 +595,8 @@ void updateRightHE() {
   if (rightRPM > 3) {
     double timeChange = millis() - rightLastMillis;
     rightLastMillis = millis();
-    Serial.print("RIGHT HE ");
-    Serial.println(calcTireSpeed(timeChange));
+    //Serial.print("RIGHT HE ");
+    //Serial.println(calcTireSpeed(timeChange));
     rightTireSpeed = calcTireSpeed(timeChange);
     rightRPM = 0;
     updateLCDSpeed((leftTireSpeed + rightTireSpeed) / 2);
