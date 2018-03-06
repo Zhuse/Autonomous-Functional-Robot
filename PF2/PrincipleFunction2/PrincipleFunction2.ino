@@ -18,8 +18,8 @@
 
 */
 
-const int maxSpeed = 255;
-
+const int maxSpeed = 180;
+const int reduceAmount = 180;
 
 const int opticalSensor0Pin = A2;
 const int opticalSensor1Pin = A3;
@@ -46,7 +46,7 @@ int delayCount = 0;
 
 int opticalSensors[] = {0,0,0,0};
 
-int THRESHOLD = 500; // TODO update this value 
+int THRESHOLD = 620; // TODO update this value 
 
 // optical[0] is furthest left sensor
 // optical[3] is furthest right sensor
@@ -85,7 +85,7 @@ void loop() {
  Serial.println(delayCount);
 
 
-	principleFunction2();
+//	principleFunction2();
 }
 
 
@@ -103,8 +103,7 @@ void updateDrive() {
 	if (!opticalSensors[0] && !opticalSensors[1]) {
 		fullSpeed();
     delayCount = 0;
-        lastAdjustment = 10;
-
+    lastAdjustment = -1;
 		return; 
 	} else if (!opticalSensors[0] && opticalSensors[1]) {
     // off to the right
@@ -160,7 +159,9 @@ void updateDrive() {
 // if spd == 1 reduce a bit, if spd == 2 reduce a lot
 void reduceLeft(int spd) {
 	if (spd == 1) {
-		analogWrite(leftMotorPower, maxSpeed - 180);
+  //    analogWrite(rightMotorPower, maxSpeed - 50);
+
+		analogWrite(leftMotorPower, maxSpeed - reduceAmount);
 	} else if (spd == 2) {
 		analogWrite(leftMotorPower, maxSpeed - 50);
 	}  
@@ -170,7 +171,9 @@ void reduceLeft(int spd) {
 // if spd == 1 reduce a bit, if spd == 2 reduce a lot
 void reduceRight(int spd) {
 	if (spd == 1) {
-		analogWrite(rightMotorPower, maxSpeed - 180);
+    //    analogWrite(leftMotorPower, maxSpeed - 50);
+
+		analogWrite(rightMotorPower, maxSpeed - reduceAmount);
 	} else if (spd == 2) {
 		analogWrite(rightMotorPower, maxSpeed - 50);
 	}  

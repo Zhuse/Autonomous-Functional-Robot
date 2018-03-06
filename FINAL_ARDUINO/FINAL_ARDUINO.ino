@@ -13,10 +13,14 @@ unsigned long lcdTimer = 0;
 unsigned long lcdResetTimer = 0;
 
 /* PF2 stuff */
-int opticalSensors[] = {0, 0, 0, 0};
-int THRESHOLD = 500;
+int opticalSensors[] = {0, 0};
+int THRESHOLD = 600;
 int lastAdjustment = 0; //0 for left 1 for right
 int delayCount = 0;
+const int increaseAmount = 30;
+const int MAX_SPEED = 170;//200; //Max motor speed
+const int reduceAmount = 140;//160;
+const int maxDelayCount = 70;
 
 /* PF3 stuff*/
 int up = 0;
@@ -53,8 +57,6 @@ const int LEFT_HE_PIN = 3;
 
 const int RX_PIN = 0;
 const int TX_PIN = 1;
-
-const int MAX_SPEED = 255; //Max motor speed
 
 /*Characters encodings for LCD*/
 const byte LCD_0 = B00110000;
@@ -350,23 +352,23 @@ void updateDrive() {
   if (!opticalSensors[0] && !opticalSensors[1]) {
     setForwardSpeed(MAX_SPEED);
     delayCount = 0;
-    lastAdjustment = 10;
+    lastAdjustment = -1;
     return;
   } else if (!opticalSensors[0] && opticalSensors[1]) {
     // off to the right
     delayCount = 0;
     lastAdjustment = 0;
-    reduceLeft(1);
+    reduceLeft();
   } else if (opticalSensors[0] && !opticalSensors[1]) {
     lastAdjustment = 1;
     delayCount = 0;
-    reduceRight(1);
+    reduceRight();
   } else if (opticalSensors[0] && opticalSensors[1]) {
-    if (delayCount < 100) {
+    if (delayCount < maxDelayCount) {
       if (lastAdjustment == 0) {
-        reduceLeft(1);
+        reduceLeft();
       } else {
-        reduceRight(1);
+        reduceRight();
       }
       delayCount++;
       return;
@@ -375,24 +377,16 @@ void updateDrive() {
   }
 }
 
-// reduce speed of left motor depending on value of spd
-// if spd == 1 reduce a bit, if spd == 2 reduce a lot
-void reduceLeft(int spd) {
-  if (spd == 1) {
-    analogWrite(MOTOR_POWER_PIN_LEFT, MAX_SPEED - 180);
-  } else if (spd == 2) {
-    analogWrite(MOTOR_POWER_PIN_LEFT, MAX_SPEED - 50);
-  }
+// reduce speed of left motor
+void reduceLeft() {
+  analogWrite(MOTOR_POWER_PIN_RIGHT, MAX_SPEED + increaseAmount);  
+  analogWrite(MOTOR_POWER_PIN_LEFT, MAX_SPEED - reduceAmount);  
 }
 
 // reduce speed of right motor
-// if spd == 1 reduce a bit, if spd == 2 reduce a lot
-void reduceRight(int spd) {
-  if (spd == 1) {
-    analogWrite(MOTOR_POWER_PIN_RIGHT, MAX_SPEED - 180);
-  } else if (spd == 2) {
-    analogWrite(MOTOR_POWER_PIN_RIGHT, MAX_SPEED - 50);
-  }
+void reduceRight() {
+  analogWrite(MOTOR_POWER_PIN_LEFT, MAX_SPEED + increaseAmount);  
+  analogWrite(MOTOR_POWER_PIN_RIGHT, MAX_SPEED - reduceAmount);
 }
 
 /*
