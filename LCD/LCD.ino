@@ -53,23 +53,59 @@ void setup() {
 }
 
 void loop() {
-  for (int i=0; i<50000; i++){
-    updateSpeed(i);
+  for (int i = 0; i < 50000; i++) {
+    updateLCD(2,i);
     delay(100);
   }
 }
 
-void updateSpeed(int speed) {
-  LCD_Write(0x01, 0); //Clear display
-  delay(100);
-  LCD_Write(LCD_S,1);
-  LCD_Write(LCD_P,1);
-  LCD_Write(LCD_E,1);
-  LCD_Write(LCD_E,1);
-  LCD_Write(LCD_D,1);
-  LCD_Write(LCD_COLON,1);
-  LCD_Write(B11000000,0); //Sets cursor to second line
-  printDigits(speed);
+void updateLCD(int mode, int speed) {
+  LCD_Write(B10001111, 0); //Set cursor to end of first line
+  writeDigitLCD(mode);
+  LCD_Write(B11000111, 0); //Sets cursor to second line
+  int speedDigits[9];
+  for (int i = 0; i < 9; i++) {
+    speedDigits[i] = speed % 10;
+    speed /= 10;
+  }
+  for (int i = 8; i >= 0; i--) {
+    writeDigitLCD(speedDigits[i]);
+  }
+}
+
+void writeDigitLCD(int digit) {
+  switch (digit) {
+    case 1:
+      LCD_Write(LCD_1, 1);
+      break;
+    case 2:
+      LCD_Write(LCD_2, 1);
+      break;
+    case 3:
+      LCD_Write(LCD_3, 1);
+      break;
+    case 4:
+      LCD_Write(LCD_4, 1);
+      break;
+    case 5:
+      LCD_Write(LCD_5, 1);
+      break;
+    case 6:
+      LCD_Write(LCD_6, 1);
+      break;
+    case 7:
+      LCD_Write(LCD_7, 1);
+      break;
+    case 8:
+      LCD_Write(LCD_8, 1);
+      break;
+    case 9:
+      LCD_Write(LCD_9, 1);
+      break;
+    default:
+      LCD_Write(LCD_0, 1);
+      break;
+  }
 }
 
 void initialize_LCD() {
@@ -84,6 +120,21 @@ void initialize_LCD() {
   LCD_Write(0x10, 0); //Display off (0000 1000)
   LCD_Write(0x0C, 0); //Display clear (0000 0001)
   LCD_Write(0x06, 0); //Entry mode set (Increment and shift to right) (0000 0111)
+
+  LCD_Write(LCD_M, 1);
+  LCD_Write(LCD_O, 1);
+  LCD_Write(LCD_D, 1);
+  LCD_Write(LCD_E, 1);
+  LCD_Write(LCD_COLON, 1);
+
+  //Print SPEED:
+  LCD_Write(B11000000, 0); //Sets cursor to second line
+  LCD_Write(LCD_S, 1);
+  LCD_Write(LCD_P, 1);
+  LCD_Write(LCD_E, 1);
+  LCD_Write(LCD_E, 1);
+  LCD_Write(LCD_D, 1);
+  LCD_Write(LCD_COLON, 1);
 }
 
 void LCD_Write(byte value, int RSval) {
@@ -113,76 +164,3 @@ void updateShiftRegister(byte dataIn) {
   digitalWrite(latchPin, HIGH);
 }
 
-void printDigits(int number){
-    if(number < 10){
-        switch (number) {
-      case 1:
-        LCD_Write(LCD_1, 1);
-        break;
-      case 2:
-        LCD_Write(LCD_2, 1);
-        break;
-      case 3:
-        LCD_Write(LCD_3, 1);
-        break;
-      case 4:
-        LCD_Write(LCD_4, 1);
-        break;
-      case 5:
-        LCD_Write(LCD_5, 1);
-        break;
-      case 6:
-        LCD_Write(LCD_6, 1);
-        break;
-      case 7:
-        LCD_Write(LCD_7, 1);
-        break;
-      case 8:
-        LCD_Write(LCD_8, 1);
-        break;
-      case 9:
-        LCD_Write(LCD_9, 1);
-        break;
-      default:
-        LCD_Write(LCD_0, 1);
-        break;
-      }
-    }
-    else{
-        printDigits(number / 10);
-        //print "number % 10" to LCD
-        int digit = number % 10;
-        switch (digit) {
-      case 1:
-        LCD_Write(LCD_1, 1);
-        break;
-      case 2:
-        LCD_Write(LCD_2, 1);
-        break;
-      case 3:
-        LCD_Write(LCD_3, 1);
-        break;
-      case 4:
-        LCD_Write(LCD_4, 1);
-        break;
-      case 5:
-        LCD_Write(LCD_5, 1);
-        break;
-      case 6:
-        LCD_Write(LCD_6, 1);
-        break;
-      case 7:
-        LCD_Write(LCD_7, 1);
-        break;
-      case 8:
-        LCD_Write(LCD_8, 1);
-        break;
-      case 9:
-        LCD_Write(LCD_9, 1);
-        break;
-      default:
-        LCD_Write(LCD_0, 1);
-        break;
-      }
-    }
-}
