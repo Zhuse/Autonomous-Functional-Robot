@@ -196,7 +196,7 @@ void principleFunction1() {
     if (currDist > 200) {
       setForwardSpeed(MAX_SPEED);
     }
-    else if (getDist() > 100) {
+    else if (currDist > 100) {
       setForwardSpeed(MAX_SPEED / 3);
     }
     else {
