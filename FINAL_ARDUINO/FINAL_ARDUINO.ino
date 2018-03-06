@@ -9,7 +9,8 @@ float currSpeed = 0;
 float leftTireSpeed = 0;
 float rightTireSpeed = 0;
 int servoPos = 90; // variable to store the servo position (90 deg is middle position)
-unsigned long timer = 0;
+unsigned long lcdTimer = 0;
+unsigned long lcdResetTimer = 0;
 
 /* PF2 stuff */
 int opticalSensors[] = {0, 0, 0, 0};
@@ -149,18 +150,22 @@ void setup() {
 void loop() {
   //Read DIP pins after each loop of some PF
   if (!digitalRead(DIP_PIN1) && !digitalRead(DIP_PIN2)) {
+    //resetLCD();
     updateLCDMode(0);
     stopRobot();
   }
   else if (digitalRead(DIP_PIN1) && !digitalRead(DIP_PIN2)) {
-    updateLCDMode(1);
-    principleFunction1();
-  }
-  else if (!digitalRead(DIP_PIN1) && digitalRead(DIP_PIN2)) {
+    //resetLCD();
     updateLCDMode(2);
     principleFunction2();
   }
+  else if (!digitalRead(DIP_PIN1) && digitalRead(DIP_PIN2)) {
+    //resetLCD();
+    updateLCDMode(1);
+    principleFunction1();
+  }
   else {
+    //resetLCD();
     updateLCDMode(3);
     stopRobot();
     //principleFunction3();
@@ -580,7 +585,7 @@ void updateLeftHE() {
     Serial.println(calcTireSpeed(timeChange));
     leftTireSpeed = calcTireSpeed(timeChange);
     leftRPM = 0;
-    updateLCDSpeed((leftTireSpeed+rightTireSpeed)/2);
+    updateLCDSpeed((leftTireSpeed + rightTireSpeed) / 2);
   }
 }
 
@@ -596,7 +601,7 @@ void updateRightHE() {
     Serial.println(calcTireSpeed(timeChange));
     rightTireSpeed = calcTireSpeed(timeChange);
     rightRPM = 0;
-    updateLCDSpeed((leftTireSpeed+rightTireSpeed)/2);
+    updateLCDSpeed((leftTireSpeed + rightTireSpeed) / 2);
   }
 }
 
@@ -612,7 +617,10 @@ double calcTireSpeed(double time) {
    Update the LCD value for mode
 */
 void updateLCDMode(int mode) {
-  LCD_Write(B10001111, 0); //Set cursor to end of first line
+  LCD_Write(B10000101, 0); //Set cursor to end of first line
+  for (int i = 0; i < 10; i++) {
+    LCD_Write(LCD_SPACE, 1);
+  }
   writeDigitLCD(mode);
 }
 
@@ -620,7 +628,7 @@ void updateLCDMode(int mode) {
    Update the LCD value speed
 */
 void updateLCDSpeed(int speed) {
-  if (millis() - timer >= 1000) {
+  if (millis() - lcdTimer > 250) {
     if (speed < 0) {
       LCD_Write(B11000110, 0); //Sets cursor to second line
       LCD_Write(LCD_DASH, 1);
@@ -637,7 +645,7 @@ void updateLCDSpeed(int speed) {
     for (int i = 8; i >= 0; i--) {
       writeDigitLCD(speedDigits[i]);
     }
-    timer = millis();
+    lcdTimer = millis();
   }
 }
 
@@ -679,8 +687,22 @@ void writeDigitLCD(int digit) {
   }
 }
 
+/*
+   Resets LCD mode and speed (clears screen and reprints)
+*/
+void resetLCD() {
+  if (millis() - lcdResetTimer >= 5000) {
+    LCD_Write(0x01, 0); //Clear Display
+    printLCDMode();  //Print MODE:
+    printLCDSpeed();  //Print SPEED:
+    //updateLCDMode(mode);
+    //updateLCDSpeed(speed);
+    lcdResetTimer = millis();
+  }
+}
+
 /**
-   Initialize the LCD with proper procedure and also relevant labels of "Mode:" and "Speed:"
+   Initialize the LCD with proper procedure and also relevant labels of "Mode: 0" and "Speed: 0"
 */
 void initializeLCD() {
   delay(15);
@@ -695,13 +717,27 @@ void initializeLCD() {
   LCD_Write(0x0C, 0); //Display clear (0000 0001)
   LCD_Write(0x06, 0); //Entry mode set (Increment and shift to right) (0000 0111)
 
+  printLCDMode();  //Print MODE:
+  printLCDSpeed();  //Print SPEED:
+  updateLCDMode(0);
+  updateLCDSpeed(0);
+}
+
+/**
+   Prints MODE: on first line of LCD
+*/
+void printLCDMode() {
+  LCD_Write(B10000000, 0); //Sets cursor to start of first line
   LCD_Write(LCD_M, 1);
   LCD_Write(LCD_O, 1);
   LCD_Write(LCD_D, 1);
   LCD_Write(LCD_E, 1);
   LCD_Write(LCD_COLON, 1);
-
-  //Print SPEED:
+}
+/**
+   Prints SPEED: on second line of LCD
+*/
+void printLCDSpeed() {
   LCD_Write(B11000000, 0); //Sets cursor to second line
   LCD_Write(LCD_S, 1);
   LCD_Write(LCD_P, 1);
