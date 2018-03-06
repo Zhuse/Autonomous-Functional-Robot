@@ -9,7 +9,8 @@ float currSpeed = 0;
 float leftTireSpeed = 0;
 float rightTireSpeed = 0;
 int servoPos = 90; // variable to store the servo position (90 deg is middle position)
-unsigned long timer = 0;
+unsigned long lcdTimer = 0;
+unsigned long lcdResetTimer = 0;
 
 /* PF2 stuff */
 int opticalSensors[] = {0, 0, 0, 0};
@@ -38,17 +39,17 @@ const int MOTOR_POLARITY_PIN_RIGHT = 7; //M1 (right wheel), HIGH is forward
 const int OPTICAL_SENSOR_PIN0 = A2;
 const int OPTICAL_SENSOR_PIN1 = A3;
 
-const int DATA_PIN = 8;
-const int LATCH_PIN = 9;
-const int CLOCK_PIN = 10;
+const int DATA_PIN = 11;
+const int LATCH_PIN = 10;
+const int CLOCK_PIN = 9;
 
 //Pins for DIP Switch
 const int DIP_PIN1 = A4;
 const int DIP_PIN2 = A5;
 
 //Pins for Hall Effect
-const int RIGHT_HE_PIN = 3;
-const int LEFT_HE_PIN = 2;
+const int RIGHT_HE_PIN = 2;
+const int LEFT_HE_PIN = 3;
 
 const int RX_PIN = 0;
 const int TX_PIN = 1;
@@ -109,16 +110,12 @@ const int LEFT_BWD = LOW;
 const int RIGHT_FWD = HIGH;
 const int RIGHT_BWD = LOW;
 
-const int LCD_DATA_PIN = 9;
-const int LCD_LATCH_PIN = 10;
-const int LCD_CLOCK_PIN = 11;
-
 Servo myservo;  // create servo object to control a servo
 SoftwareSerial BT(TX_PIN, RX_PIN);
 
 void setup() {
   Serial.begin(9600);
-  BT.begin(9600);
+  //BT.begin(9600);
   pinMode(LM35_PIN, INPUT);
   pinMode(HC_SR04_TRIG_PIN, OUTPUT);
   pinMode(HC_SR04_ECHO_PIN, INPUT);
@@ -153,15 +150,23 @@ void setup() {
 void loop() {
   //Read DIP pins after each loop of some PF
   if (!digitalRead(DIP_PIN1) && !digitalRead(DIP_PIN2)) {
+    //resetLCD();
+    updateLCDMode(0);
     stopRobot();
   }
   else if (digitalRead(DIP_PIN1) && !digitalRead(DIP_PIN2)) {
-    principleFunction1();
-  }
-  else if (!digitalRead(DIP_PIN1) && digitalRead(DIP_PIN2)) {
+    //resetLCD();
+    updateLCDMode(2);
     principleFunction2();
   }
+  else if (!digitalRead(DIP_PIN1) && digitalRead(DIP_PIN2)) {
+    //resetLCD();
+    updateLCDMode(1);
+    principleFunction1();
+  }
   else {
+    //resetLCD();
+    updateLCDMode(3);
     stopRobot();
     //principleFunction3();
   }
@@ -174,48 +179,39 @@ void loop() {
    Robot checks left and right using servo and then chooses side with most space and repeats
 */
 void principleFunction1() {
-  while (getDist() > 5) {
-    if (currDist > 25) {
-      //Max speed, set currSpeed
-      //Serial.print("Dist:");
-      //Serial.println(currDist);
+  while (getDist() > 25) {
+    if (currDist > 200) {
       setForwardSpeed(MAX_SPEED);
     }
-    else {
-      //Serial.print("Dist:");
-      //Serial.println(currDist);
-
-      //Change speed as a function of distance
-      //int forwardSpeed = MAX_SPEED.0 - currDist * 25.5;
-      //Serial.print("SPEED: ");
-      //Serial.println(forwardSpeed);
-      setForwardSpeed(150);
+    else if (getDist() > 100) {
+      setForwardSpeed(MAX_SPEED / 3);
     }
-    updateLCD(1, currSpeed);
+    else {
+      setForwardSpeed(MAX_SPEED / 5);
+    }
   }
-  setForwardSpeed(0);
-  updateLCD(1, currSpeed);
+  stopRobot();
   myservo.write(180); //Check left
-  delay(500);
+  delay(1000);
   float leftDist = getDist();
   myservo.write(0); //Check right
-  delay(500);
+  delay(1000);
   float rightDist = getDist();
   myservo.write(90); //Reset position
 
   if (leftDist > rightDist) {
     Serial.println("LEFT IS CLEAR");
     stationaryLeftTurn();
-    delay(35);
+    delay(40);
     //Turn left 90 degrees
   }
   else {
     Serial.println("RIGHT IS CLEAR");
     stationaryRightTurn();
-    delay(35);
+    delay(40);
     //Turn right 90 degrees
   }
-  stopRobot();
+  //stopRobot();
 }
 
 /*
@@ -224,7 +220,6 @@ void principleFunction1() {
 void principleFunction2() {
   updateOpticalSensors();
   updateDrive();
-  updateLCD(2, currSpeed);
 }
 
 /*
@@ -270,7 +265,6 @@ void principleFunction3() {
   else {
     stopRobot();
   }
-  updateLCD(3, currSpeed);
 }
 
 /*
@@ -416,19 +410,19 @@ void setForwardSpeed(int speed) {
   currSpeed = speed; //Set member var to speed with sign
   speed = abs(speed);
   analogWrite(MOTOR_POWER_PIN_LEFT, speed);
-  analogWrite(MOTOR_POWER_PIN_RIGHT, speed);
+  analogWrite(MOTOR_POWER_PIN_RIGHT, speed-4);
   //Calibrate with HE:
   /*
     if (leftTireSpeed + 100 < rightTireSpeed)
-      while (leftTireSpeed < rightTireSpeed) {
-        analogWrite(MOTOR_POWER_PIN_RIGHT, speed -= 1);
-        delay(10);
-      }
+    while (leftTireSpeed < rightTireSpeed) {
+      analogWrite(MOTOR_POWER_PIN_RIGHT, speed -= 1);
+      delay(10);
+    }
     else if (leftTireSpeed > rightTireSpeed + 100)
-      while (rightTireSpeed < leftTireSpeed) {
-        analogWrite(MOTOR_POWER_PIN_LEFT, speed -= 1);
-        delay(10);
-      }*/
+    while (rightTireSpeed < leftTireSpeed) {
+      analogWrite(MOTOR_POWER_PIN_LEFT, speed -= 1);
+      delay(10);
+    }*/
 }
 
 /*
@@ -517,9 +511,14 @@ void stopRobot() {
    Also modifies member variables: currTemp and speedSound and currDist
 */
 float getDist() {
+  delay(100);
   currTemp = getLMTemp(LM35_PIN);
   speedSound = 331.5 + (0.6 * currTemp);
   currDist = readHCSR04(HC_SR04_TRIG_PIN, HC_SR04_ECHO_PIN);
+  Serial.print("Dist");
+  Serial.println(currDist);
+  Serial.print("Curr Temp");
+  Serial.println(currTemp);
   return currDist;
 }
 
@@ -580,10 +579,11 @@ void updateLeftHE() {
   if (leftRPM > 3) {
     double timeChange = millis() - leftLastMillis;
     leftLastMillis = millis();
-    Serial.print("LEFT HE ");
-    Serial.println(calcTireSpeed(timeChange));
+    //Serial.print("LEFT HE ");
+    //Serial.println(calcTireSpeed(timeChange));
     leftTireSpeed = calcTireSpeed(timeChange);
     leftRPM = 0;
+    updateLCDSpeed((leftTireSpeed + rightTireSpeed) / 2);
   }
 }
 
@@ -595,10 +595,11 @@ void updateRightHE() {
   if (rightRPM > 3) {
     double timeChange = millis() - rightLastMillis;
     rightLastMillis = millis();
-    Serial.print("RIGHT HE ");
-    Serial.println(calcTireSpeed(timeChange));
+    //Serial.print("RIGHT HE ");
+    //Serial.println(calcTireSpeed(timeChange));
     rightTireSpeed = calcTireSpeed(timeChange);
     rightRPM = 0;
+    updateLCDSpeed((leftTireSpeed + rightTireSpeed) / 2);
   }
 }
 
@@ -606,30 +607,43 @@ void updateRightHE() {
    Calculate tire speeds using hall effect sensors
 */
 double calcTireSpeed(double time) {
+  if (time > 1000) return 0;
   return (distToCenter * PI) / (time / 1000);
 }
 
 /*
-   Update the LCD values for mode and speed
+   Update the LCD value for mode
 */
-void updateLCD(int mode, int speed) {
-  LCD_Write(B10001111, 0); //Set cursor to end of first line
+void updateLCDMode(int mode) {
+  LCD_Write(B10000101, 0); //Set cursor to end of first line
+  for (int i = 0; i < 10; i++) {
+    LCD_Write(LCD_SPACE, 1);
+  }
   writeDigitLCD(mode);
-  if (speed<0){
-    LCD_Write(B11000110, 0); //Sets cursor to second line
-    LCD_Write(LCD_DASH, 1);
-    speed = abs(speed);
-  }
-  else{
-    LCD_Write(B11000111, 0); //Sets cursor to second line
-  }
-  int speedDigits[9];
-  for (int i = 0; i < 9; i++) {
-    speedDigits[i] = speed % 10;
-    speed /= 10;
-  }
-  for (int i = 8; i >= 0; i--) {
-    writeDigitLCD(speedDigits[i]);
+}
+
+/*
+   Update the LCD value speed
+*/
+void updateLCDSpeed(int speed) {
+  if (millis() - lcdTimer > 250) {
+    if (speed < 0) {
+      LCD_Write(B11000110, 0); //Sets cursor to second line
+      LCD_Write(LCD_DASH, 1);
+      speed = abs(speed);
+    }
+    else {
+      LCD_Write(B11000111, 0); //Sets cursor to second line
+    }
+    int speedDigits[9];
+    for (int i = 0; i < 9; i++) {
+      speedDigits[i] = speed % 10;
+      speed /= 10;
+    }
+    for (int i = 8; i >= 0; i--) {
+      writeDigitLCD(speedDigits[i]);
+    }
+    lcdTimer = millis();
   }
 }
 
@@ -671,8 +685,22 @@ void writeDigitLCD(int digit) {
   }
 }
 
+/*
+   Resets LCD mode and speed (clears screen and reprints)
+*/
+void resetLCD() {
+  if (millis() - lcdResetTimer >= 5000) {
+    LCD_Write(0x01, 0); //Clear Display
+    printLCDMode();  //Print MODE:
+    printLCDSpeed();  //Print SPEED:
+    //updateLCDMode(mode);
+    //updateLCDSpeed(speed);
+    lcdResetTimer = millis();
+  }
+}
+
 /**
-   Initialize the LCD with proper procedure and also relevant labels of "Mode:" and "Speed:"
+   Initialize the LCD with proper procedure and also relevant labels of "Mode: 0" and "Speed: 0"
 */
 void initializeLCD() {
   delay(15);
@@ -687,13 +715,27 @@ void initializeLCD() {
   LCD_Write(0x0C, 0); //Display clear (0000 0001)
   LCD_Write(0x06, 0); //Entry mode set (Increment and shift to right) (0000 0111)
 
+  printLCDMode();  //Print MODE:
+  printLCDSpeed();  //Print SPEED:
+  updateLCDMode(0);
+  updateLCDSpeed(0);
+}
+
+/**
+   Prints MODE: on first line of LCD
+*/
+void printLCDMode() {
+  LCD_Write(B10000000, 0); //Sets cursor to start of first line
   LCD_Write(LCD_M, 1);
   LCD_Write(LCD_O, 1);
   LCD_Write(LCD_D, 1);
   LCD_Write(LCD_E, 1);
   LCD_Write(LCD_COLON, 1);
-
-  //Print SPEED:
+}
+/**
+   Prints SPEED: on second line of LCD
+*/
+void printLCDSpeed() {
   LCD_Write(B11000000, 0); //Sets cursor to second line
   LCD_Write(LCD_S, 1);
   LCD_Write(LCD_P, 1);

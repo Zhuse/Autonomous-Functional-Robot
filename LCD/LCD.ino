@@ -1,6 +1,6 @@
-const int DATA_PIN = 8;
-const int LATCH_PIN = 9;
-const int CLOCK_PIN = 10;
+const int DATA_PIN = 11;
+const int LATCH_PIN = 10;
+const int CLOCK_PIN = 9;
 
 /*Characters encodings for LCD*/
 const byte LCD_0 = B00110000;
