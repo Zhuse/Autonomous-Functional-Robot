@@ -70,12 +70,12 @@ const int LCD_LATCH_PIN = 10;
 const int LCD_CLOCK_PIN = 11;
 
 Servo myservo;  // create servo object to control a servo
-SoftwareSerial mySerial(RX_PIN, TX_PIN);
+SoftwareSerial BT(TX_PIN, RX_PIN);
 LiquidCrystal595 lcd(LCD_DATA_PIN, LCD_LATCH_PIN, LCD_CLOCK_PIN); //setup lcd
 
 void setup() {
   Serial.begin(9600);
-  mySerial.begin(9600);
+  BT.begin(9600);
   pinMode(LM35_PIN, INPUT);
   pinMode(HC_SR04_TRIG_PIN, OUTPUT);
   pinMode(HC_SR04_ECHO_PIN, INPUT);
@@ -227,26 +227,50 @@ void principleFunction3() {
 */
 void getProcessingCommand() {
   String command = "";
-  if (mySerial.available()) {
-    while (mySerial.available()) { // While there is more to be read, keep reading.
-      command += (char)mySerial.read();
+  if (BT.available()) {
+    while (BT.available()) { // While there is more to be read, keep reading.
+      command += (char)BT.read();
     }
   }
   int instruction = command.toInt();
   while (instruction >= 100000) { //Reduce instruction to 5 digits
     instruction /= 10;
   }
-  up = instruction / 10000;
-  down = instruction / 1000 % 10;
-  left = instruction / 100 % 10;
-  right = instruction / 10 % 10;
-  gear = instruction % 10;
-
+  switch(instruction){
+      case 0:
+        BT.println("OFF");
+        break;
+      case 16: 
+        BT.println("UP");
+        break;
+      case 242:
+        BT.println("DOWN-RIGHT");
+        break;
+      case 100:
+        BT.println("LEFT");
+        break;
+      case 10: 
+        BT.println("RIGHT");
+        break;
+      case 232:
+        BT.println("DOWN");
+        break;
+      case 76:
+        BT.println("DOWN-LEFT");
+        break;
+      case 116: 
+        BT.println("UP-LEFT");
+        break;
+      case 26:
+        BT.println("UP-RIGHT");
+        break;
+      default: break;
+    } 
   //Alternate implementation in case above doesn't work
 //    String command = "";
-//  if (mySerial.available()) {
-//    while (mySerial.available()) { // While there is more to be read, keep reading.
-//      command += (char)mySerial.read();
+//  if (BT.available()) {
+//    while (BT.available()) { // While there is more to be read, keep reading.
+//      command += (char)BT.read();
 //    }
 //  }
 //    up = command.substring(0,1).toInt();

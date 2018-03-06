@@ -23,6 +23,8 @@
   PImage leftU;
   PImage rightU;
   PImage background;
+  PImage speed;
+  PImage needle;
   
   PFont futura;
   PFont xeno;
@@ -63,12 +65,14 @@
     left = loadImage("arrowLeft.png");
     right = loadImage("arrowRight.png");
     background = loadImage("background.jpg");
+    speed = loadImage("speed.png");
+    needle = loadImage("needle.png");
     
     futura = createFont("Futura Light Regular.otf", 32);
     xeno = createFont("Xenotron.ttf", 32);
     
     // Open the Serial port.
-   // myPort = new Serial(this, "COM5", 9600);  //Use COM5
+   // myPort = new Serial(this, "COM8", 9600);  //Use COM5
 
     // don't generate a serialEvent() unless you get a newline character:
     //myPort.bufferUntil('\n');
@@ -175,34 +179,26 @@ void leapOnKeyTapGesture(KeyTapGesture g){
     String distanceMark = ""; //labels for the distance markings
     int w = (int)(width / 3.3); //x position of the plot
     int h = height; //y position of the plot
-    legend(); //draw the legend
     
     //Draw the radar lines.
-    radarLine(w, h, 400, 4);
+    image(speed, 150, 200);
+     pushMatrix();
+     imageMode(CORNER);
+  translate(540, height);
+  rotate(PI  );
+  image(needle, -needle.width/2, -needle.height/2);
+  popMatrix();
+    imageMode(CORNER);
     strokeWeight(1);
-    radarLine(w, h, 350, 1);
-    radarLine(w, h, 300, 1);
-    radarLine(w, h, 250, 1);
-    radarLine(w, h, 200, 1);
-    radarLine(w, h, 150, 1);
-    radarLine(w, h, 100, 1);
-    radarLine(w, h, 50, 1);
     textSize(14);
     fill(255,255,0);
-    
-    //Draw the labels for the distance markings depending on the mode
-    for(int i = 8; i > 0; i--){
-        distanceMark = 50*i + ""; 
-      time++;
-      text(distanceMark, width / 3.3 - 3, (8-i) * 50 + height / 2.78);
-    }
     strokeWeight(2);
     
     //Draw the error bound lines
-    for(int i = 0; i <= 6; i++){
-      fill(75,160,255);
-      line(width / 3.3 + 400 * cos(-1 * i * PI/6), height + 400 * sin(-1 * i * PI/6), width / 3.3 + 410 * cos(-1 * i * PI/6), height + 410 * sin(-1 * i * PI/6));
-      text(i* 30 + "°", width / 3.3 + 425 * cos(-1 * i * PI/6) - 10, height + 418 * sin(-1 * i * PI/6));
+    for(int i = 0; i < 9; i++){
+      fill(255,255,255);
+      textSize(30);
+      text(((i* 0.4 - 4) * -1), width / 3.3 + 425 * cos(-1 * i * PI/9 - PI/20) - 40, height + 418 * sin(-1 * i * PI/9 - PI / 20));
     }
     strokeWeight(1);
   }
@@ -210,120 +206,14 @@ void leapOnKeyTapGesture(KeyTapGesture g){
   //Redraw the canvas
   void draw () {
     String txtIns = "";
-    int counter = 0; //index for line objects
-    float x; 
-    float y;
-    float opacity;
-    float angle;
-    
-    //Avoid out of bounds error
-    if(degree >= PI){
-      degree = PI;
-    } else if(degree <= 0){
-      degree = 0;
-    } 
-    //Rotate depending on direction.
-    if(direction == 0){
-      degree += (PI / 180);
-    } else if (direction == 1){
-      degree = degree - PI / 180;
-    }
-    
-    //If a button is pressed, rotate the "zone" and redraw the canvas with previous lines
-    if(direction != 2){
       image(background, 0, 0, width, height);
-      drawGrid();
-      strokeWeight(3);
-      stroke(255,0,0,255);
-      strokeWeight(10);
-      counter = (int)(degree * 180 / PI);
-      if(counter >= 179){
-        counter = 179;
-        direction = 2;
-      } 
-      if(counter <= 0){
-        counter = 0;
-        direction = 2;
-      }
-      title();
-      //Redraw previous lines with reduced opacity
-      lines.get(counter).distance = distance;
-      lines.get(counter).x = distance * cos(-1 * degree) + width / 3.3;
-      lines.get(counter).y = distance * sin(-1 * degree) + height;
-      lines.get(counter).opacity = 255;
-      lines.get(counter).angle = degree;
-      for(int i = 1; i < 180; i++){
-        x = lines.get(i).x;
-        y = lines.get(i).y;
-        angle = lines.get(i).angle;
-        //System.out.println(x*x + y*y + "");
-        lines.get(i).opacity -= 10;
-        opacity = lines.get(i).opacity;
-        stroke(255,0,0,opacity);
-        line(x, y, width / 3.3 + 397 * cos(-1 * angle), height + 397 * sin(-1 * angle));
-        stroke(255,0,0,opacity);
-      }
-      
-      //Redraw error bound lines
-      strokeWeight(1);
-      line(width / 3.3, height, width / 3.3 + 397 * cos(-1 * degree), height + 397 * sin(-1 * degree));
-      stroke(255,128,128,255);
-      line(width / 3.3, height, width / 3.3 + 397 * cos(-1 * degree + PI/12), height + 397 * sin(-1 * degree + PI/12));
-      line(width / 3.3, height, width / 3.3 + 397 * cos(-1 * degree - PI/12), height + 397 * sin(-1 * degree - PI/12));
-      //myPort.write(direction); //Send the current direction of rotation to the Arduino for motor movement
-      
-       //If no button is pressed, do not rotate the "zone" and continue redrawing the canvas
-    } else if (direction == 2){
-      image(background, 0, 0, width, height);
-      drawGrid();
       title();
       xAxis();
       yAxis();
-      stroke(255,0,0,255);
-      strokeWeight(10);
-      
-      //Redraw the previous lines with a reduced opacity
-      for(int i = 1; i < 180; i++){
-        x = lines.get(i).x;
-        y = lines.get(i).y;
-        angle = lines.get(i).angle;
-        
-        //If the distance error is out of scale, bring it back in.
-        if(mode == 0 && x*x + y*y > 16000000){
-          x = 400 * cos(angle);
-          y = 400 * sin(angle);
-        }
-        lines.get(i).opacity -= 10;
-        opacity = lines.get(i).opacity;
-        stroke(255,0,0,opacity);
-        
-        //Draw the lines on the plot and graph
-        line(x, y, width / 3.3 + 397 * cos(-1 * angle), height + 397 * sin(-1 * angle));
-      }
-      
-      //Redraw the "zone" and the error bound lines
-      strokeWeight(3);
-      line(width / 3.3, height, width / 3.3 + 397 * cos(-1 * degree), height + 397 * sin(-1 * degree));
-      strokeWeight(0.5);
-      stroke(255,128,128,255);
-      line(width / 3.3, height, width / 3.3 + 397 * cos(-1 * degree + PI/12), height + 397 * sin(-1 * degree + PI/12));
-      line(width / 3.3, height, width / 3.3 + 397 * cos(-1 * degree - PI/12), height + 397 * sin(-1 * degree - PI/12));
-      strokeWeight(1);
-    }
-    stroke(154,205,50);
-    strokeWeight(10);
-    
-    //Continue drawing the lines on the plot.
-    for(int i = 0;i < plot.size(); i++){
-      line(plot.get(i).xPos,height - 60, plot.get(i).xPos, height - 60 - plot.get(i).distance);
-    }
-    
-    //Clear the graph if the x position of the drawn lines has exceeded the end of the graph.
-    if(xPos >= 1600){
-      xPos = 1105;
-      plot.clear();
-    }
+      drawGrid();
+      legend();
       System.out.println(upUse + "" + downUse + "" + leftUse + "" + rightUse + "" + gear);
+      //myPort.write((int)(upUse * 10000 + downUse * 1000 + leftUse * 100 + rightUse * 10));
       txtIns = determineIns();
       if(mode == 1){
          text(txtIns, width / 1.42, height / 1.15);
