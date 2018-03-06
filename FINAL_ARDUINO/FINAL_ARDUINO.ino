@@ -264,21 +264,21 @@ void principleFunction3() {
    Gets instruction code from processing for PF3
 */
 void getProcessingCommand() {
-String command = "";
+  String command = "";
   int instruction = 0;
- if (BT.available()) {
+  if (BT.available()) {
     while (BT.available()) { // While there is more to be read, keep reading.
       command += (int)BT.read();
     }
-    instruction = command.toInt();  
-    switch(instruction){
+    instruction = command.toInt();
+    switch (instruction) {
       case 0:
         up = 0;
         down = 0;
         left = 0;
         right = 0;
         break;
-      case 16: 
+      case 16:
         up = 1;
         down = 0;
         left = 0;
@@ -296,7 +296,7 @@ String command = "";
         left = 1;
         right = 0;
         break;
-      case 10: 
+      case 10:
         up = 0;
         down = 0;
         left = 0;
@@ -314,7 +314,7 @@ String command = "";
         left = 1;
         right = 0;
         break;
-      case 116: 
+      case 116:
         up = 1;
         down = 0;
         left = 1;
@@ -379,13 +379,13 @@ void updateDrive() {
 
 // reduce speed of left motor
 void reduceLeft() {
-  analogWrite(MOTOR_POWER_PIN_RIGHT, MAX_SPEED + increaseAmount);  
-  analogWrite(MOTOR_POWER_PIN_LEFT, MAX_SPEED - reduceAmount);  
+  analogWrite(MOTOR_POWER_PIN_RIGHT, MAX_SPEED + increaseAmount);
+  analogWrite(MOTOR_POWER_PIN_LEFT, MAX_SPEED - reduceAmount);
 }
 
 // reduce speed of right motor
 void reduceRight() {
-  analogWrite(MOTOR_POWER_PIN_LEFT, MAX_SPEED + increaseAmount);  
+  analogWrite(MOTOR_POWER_PIN_LEFT, MAX_SPEED + increaseAmount);
   analogWrite(MOTOR_POWER_PIN_RIGHT, MAX_SPEED - reduceAmount);
 }
 
@@ -422,7 +422,7 @@ void setForwardSpeed(int speed) {
   currSpeed = speed; //Set member var to speed with sign
   speed = abs(speed);
   analogWrite(MOTOR_POWER_PIN_LEFT, speed);
-  analogWrite(MOTOR_POWER_PIN_RIGHT, speed-4);
+  analogWrite(MOTOR_POWER_PIN_RIGHT, speed - 4);
   //Calibrate with HE:
   /*
     if (leftTireSpeed + 100 < rightTireSpeed)
@@ -587,15 +587,15 @@ float receiveHCSR04(int echoPin) {
    Update left hall effect sensor value, triggered by interrupt
 */
 void updateLeftHE() {
-  leftRPM++;
-  if (leftRPM > 3) {
-    double timeChange = millis() - leftLastMillis;
-    leftLastMillis = millis();
+  leftRPM++; //Increments left rounds
+  if (leftRPM > 3) { //Only updates for every third rpm
+    double timeChange = millis() - leftLastMillis; //Calculates time change from time since program start
+    leftLastMillis = millis(); //Updates the last interupt time
     //Serial.print("LEFT HE ");
     //Serial.println(calcTireSpeed(timeChange));
-    leftTireSpeed = calcTireSpeed(timeChange);
-    leftRPM = 0;
-    updateLCDSpeed((leftTireSpeed + rightTireSpeed) / 2);
+    leftTireSpeed = calcTireSpeed(timeChange); //Calculates tire speed and updates
+    leftRPM = 0; //Resets rpms that passed
+    updateLCDSpeed((leftTireSpeed + rightTireSpeed) / 2); //Updates the LCD screen
   }
 }
 
@@ -603,15 +603,15 @@ void updateLeftHE() {
    Update right hall effect sensor value, triggered by interrupt
 */
 void updateRightHE() {
-  rightRPM++;
-  if (rightRPM > 3) {
-    double timeChange = millis() - rightLastMillis;
-    rightLastMillis = millis();
+  rightRPM++; //Increments right rounds
+  if (rightRPM > 3) { //Only updates for every third rpm
+    double timeChange = millis() - rightLastMillis; //Calculates the time change since last interrupt
+    rightLastMillis = millis(); //Updates the last interrupt time
     //Serial.print("RIGHT HE ");
     //Serial.println(calcTireSpeed(timeChange));
-    rightTireSpeed = calcTireSpeed(timeChange);
+    rightTireSpeed = calcTireSpeed(timeChange); //Updates the tire speed
     rightRPM = 0;
-    updateLCDSpeed((leftTireSpeed + rightTireSpeed) / 2);
+    updateLCDSpeed((leftTireSpeed + rightTireSpeed) / 2); //Updates the LCD speed
   }
 }
 
@@ -619,12 +619,12 @@ void updateRightHE() {
    Calculate tire speeds using hall effect sensors
 */
 double calcTireSpeed(double time) {
-  if (time > 1000){
+  if (time > 1000) { //Only updates the tire speed every 1 sec
     BT.println((distToCenter * PI) / (time / 1000));
     return 0;
   }
-  BT.println((distToCenter * PI) / (time / 1000));
-  return (distToCenter * PI) / (time / 1000);
+  BT.println((distToCenter * PI) / (time / 1000)); //Prints to LCD
+  return (distToCenter * PI) / (time / 1000); 
 }
 
 /*
