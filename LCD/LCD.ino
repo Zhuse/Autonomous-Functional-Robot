@@ -1,6 +1,6 @@
-int dataPin = 8;
-int latchPin = 9;
-int clockPin = 10;
+const int DATA_PIN = 8;
+const int LATCH_PIN = 9;
+const int CLOCK_PIN = 10;
 
 /*Characters encodings for LCD*/
 const byte LCD_0 = B00110000;
@@ -45,11 +45,11 @@ const byte LCD_EXCLMARK = B00100001;
 const byte LCD_COLON = B00111010;
 
 void setup() {
-  pinMode(latchPin, OUTPUT);
-  pinMode(dataPin, OUTPUT);
-  pinMode(clockPin, OUTPUT);
+  pinMode(LATCH_PIN, OUTPUT);
+  pinMode(DATA_PIN, OUTPUT);
+  pinMode(CLOCK_PIN, OUTPUT);
   Serial.begin(9600);
-  initialize_LCD();
+  initializeLCD();
 }
 
 void loop() {
@@ -108,7 +108,7 @@ void writeDigitLCD(int digit) {
   }
 }
 
-void initialize_LCD() {
+void initializeLCD() {
   delay(15);
   LCD_Write(0x03, 0); //Function set (8 bits)
   delay(5);
@@ -159,8 +159,8 @@ void pulseE(byte existingData) {
 
 //DataIn is in format: RS, E, D7, D6, D5, D4 (MSB FIRST)
 void updateShiftRegister(byte dataIn) {
-  digitalWrite(latchPin, LOW);
-  shiftOut(dataPin, clockPin, MSBFIRST, dataIn); //MSBFIRST
-  digitalWrite(latchPin, HIGH);
+  digitalWrite(LATCH_PIN, LOW);
+  shiftOut(DATA_PIN, CLOCK_PIN, MSBFIRST, dataIn); //MSBFIRST
+  digitalWrite(LATCH_PIN, HIGH);
 }
 
