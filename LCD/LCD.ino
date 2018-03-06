@@ -69,45 +69,7 @@ void updateSpeed(int speed) {
   LCD_Write(LCD_D,1);
   LCD_Write(LCD_COLON,1);
   LCD_Write(B11000000,0); //Sets cursor to second line
-  int speedDigits[6];
-  for (int i = 0; i < 6; i++) {
-    speedDigits[i] = speed % 10;
-    speed /= 10;
-  }
-  for (int i = 5; i >= 0; i--) {
-    switch (speedDigits[i]) {
-      case 1:
-        LCD_Write(LCD_1, 1);
-        break;
-      case 2:
-        LCD_Write(LCD_2, 1);
-        break;
-      case 3:
-        LCD_Write(LCD_3, 1);
-        break;
-      case 4:
-        LCD_Write(LCD_4, 1);
-        break;
-      case 5:
-        LCD_Write(LCD_5, 1);
-        break;
-      case 6:
-        LCD_Write(LCD_6, 1);
-        break;
-      case 7:
-        LCD_Write(LCD_7, 1);
-        break;
-      case 8:
-        LCD_Write(LCD_8, 1);
-        break;
-      case 9:
-        LCD_Write(LCD_9, 1);
-        break;
-      default:
-        LCD_Write(LCD_0, 1);
-        break;
-    }
-  }
+  printDigits(speed);
 }
 
 void initialize_LCD() {
@@ -153,10 +115,74 @@ void updateShiftRegister(byte dataIn) {
 
 void printDigits(int number){
     if(number < 10){
-        //print "number" to LCD
+        switch (number) {
+      case 1:
+        LCD_Write(LCD_1, 1);
+        break;
+      case 2:
+        LCD_Write(LCD_2, 1);
+        break;
+      case 3:
+        LCD_Write(LCD_3, 1);
+        break;
+      case 4:
+        LCD_Write(LCD_4, 1);
+        break;
+      case 5:
+        LCD_Write(LCD_5, 1);
+        break;
+      case 6:
+        LCD_Write(LCD_6, 1);
+        break;
+      case 7:
+        LCD_Write(LCD_7, 1);
+        break;
+      case 8:
+        LCD_Write(LCD_8, 1);
+        break;
+      case 9:
+        LCD_Write(LCD_9, 1);
+        break;
+      default:
+        LCD_Write(LCD_0, 1);
+        break;
+      }
     }
     else{
         printDigits(number / 10);
         //print "number % 10" to LCD
+        int digit = number % 10;
+        switch (digit) {
+      case 1:
+        LCD_Write(LCD_1, 1);
+        break;
+      case 2:
+        LCD_Write(LCD_2, 1);
+        break;
+      case 3:
+        LCD_Write(LCD_3, 1);
+        break;
+      case 4:
+        LCD_Write(LCD_4, 1);
+        break;
+      case 5:
+        LCD_Write(LCD_5, 1);
+        break;
+      case 6:
+        LCD_Write(LCD_6, 1);
+        break;
+      case 7:
+        LCD_Write(LCD_7, 1);
+        break;
+      case 8:
+        LCD_Write(LCD_8, 1);
+        break;
+      case 9:
+        LCD_Write(LCD_9, 1);
+        break;
+      default:
+        LCD_Write(LCD_0, 1);
+        break;
+      }
     }
 }
