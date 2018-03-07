@@ -120,7 +120,8 @@ Servo myservo;  // create servo object to control a servo
 SoftwareSerial BT(TX_PIN, RX_PIN);
 
 void setup() {
-  BT.begin(9600);
+  Serial.begin(9600);
+  //BT.begin(9600);
 
   //For distance sensor related pins
   pinMode(LM35_PIN, INPUT);
@@ -192,15 +193,25 @@ void loop() {
 */
 void principleFunction1() {
   float dist = getDist();
-  while (dist > 10) {
-    if (dist > 50) {
-      setForwardSpeed(255);
+  bool closeFlag = false; //Set to true when we get within 25 cm, when we get a 1000 cm reading (undected reading, then stop robot)
+  while (dist > 15) {
+    stopRobot(); //Makes robot straight
+    Serial.println(dist);
+    if (dist > 100) {
+      setForwardSpeed(200);
     }
-    else if (dist > 25) {
+    else if (dist > 50){
       setForwardSpeed(125);
     }
-    else {
-      setForwardSpeed(50);
+    else if (dist > 30) {
+      setForwardSpeed(100);
+    }
+    else if (dist > 15){
+      closeFlag = true;
+      setForwardSpeed(85);
+    }
+    else if (closeFlag && dist > 30){
+      break; //stop robot if we get within 25 cm and suddenly get a bad reading (could be caused by object too close)
     }
     dist = getDist();
   }
@@ -215,12 +226,12 @@ void principleFunction1() {
 
   if (leftDist > rightDist) {
     stationaryLeftTurn();
-    delay(500);
+    delay(400);
     //Turn left 90 degrees
   }
   else {
     stationaryRightTurn();
-    delay(530);
+    delay(400);
     //Turn right 90 degrees
   }
   stopRobot();
@@ -420,7 +431,7 @@ void setForwardSpeed(int speed) {
   currSpeed = speed; //Set member var to speed with sign
   speed = abs(speed);
   analogWrite(MOTOR_POWER_PIN_LEFT, speed);
-  analogWrite(MOTOR_POWER_PIN_RIGHT, speed - 5);
+  analogWrite(MOTOR_POWER_PIN_RIGHT, speed * 0.95);
 }
 
 /*
