@@ -3,7 +3,6 @@
 
 /* Member variables */
 float currTemp;
-float currDist;
 float speedSound; //Speed of sound based on current temp
 float currSpeed = 0;
 float leftTireSpeed = 0;
@@ -32,8 +31,8 @@ int gear = 1;
 //Pins for distance sensor
 const int LM35_PIN = A0;
 const int SERVO_PIN = A1;
-const int HC_SR04_TRIG_PIN = 12;
-const int HC_SR04_ECHO_PIN = 13;
+const int TRIG_PIN = 12;
+const int ECHO_PIN = 13;
 
 //Pins for motor
 const int MOTOR_POWER_PIN_LEFT = 5; //E1 (left wheel speed)
@@ -121,12 +120,13 @@ Servo myservo;  // create servo object to control a servo
 SoftwareSerial BT(TX_PIN, RX_PIN);
 
 void setup() {
-  BT.begin(9600);
+  Serial.begin(9600);
+  //BT.begin(9600);
 
   //For distance sensor related pins
   pinMode(LM35_PIN, INPUT);
-  pinMode(HC_SR04_TRIG_PIN, OUTPUT);
-  pinMode(HC_SR04_ECHO_PIN, INPUT);
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
 
   pinMode(MOTOR_POLARITY_PIN_LEFT, OUTPUT); //Direction
   pinMode(MOTOR_POLARITY_PIN_RIGHT, OUTPUT); //Direction
@@ -192,16 +192,19 @@ void loop() {
    Robot checks left and right using servo and then chooses side with most space and repeats
 */
 void principleFunction1() {
-  while (getDist() > 10) {
-    if (currDist > 50) {
+  float dist = getDist();
+  while (dist > 10) {
+    Serial.println(dist);
+    if (dist > 50) {
       setForwardSpeed(MAX_SPEED);
     }
-    else if (currDist > 25) {
+    else if (dist > 25) {
       setForwardSpeed(MAX_SPEED / 2);
     }
     else {
       setForwardSpeed(MAX_SPEED / 5);
     }
+    dist = getDist();
   }
   stopRobot();
   myservo.write(180); //Check left
@@ -505,12 +508,22 @@ float getDist() {
   delay(100);
   currTemp = getLMTemp(LM35_PIN);
   speedSound = 331.5 + (0.6 * currTemp);
-  currDist = readHCSR04(HC_SR04_TRIG_PIN, HC_SR04_ECHO_PIN);
-  Serial.print("Dist");
-  Serial.println(currDist);
-  Serial.print("Curr Temp");
-  Serial.println(currTemp);
-  return currDist;
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10); //Pulse high for at least 10us
+  digitalWrite(TRIG_PIN, LOW); //End pulse
+
+  unsigned long pulseDuration;
+  unsigned long timeOutDuration = 40000;
+  pulseDuration = pulseIn(ECHO_PIN, HIGH, timeOutDuration);
+
+  if (pulseDuration == 0) { //If echo pulse times out, no obstacle is detected
+    return 1000;
+  }
+  else {
+    return pulseDuration / (20000.0 / speedSound); //Return distance otherwise
+  }
 }
 
 /**
@@ -521,48 +534,6 @@ float getLMTemp(int PIN) {
 }
 
 /**
-   Initiates and takes a reading from the HC-SR04.
-   Returns a distance to detected object in cm.
-   If no object is detected returns 400 (max range of device)
-*/
-float readHCSR04(int trigPin, int echoPin) {
-  initiateHCSR04(trigPin);
-  return receiveHCSR04(echoPin);
-}
-
-/**
-   Procedure to initiate HC SR04 sensor reading
-*/
-void initiateHCSR04(int trigPin) {
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10); //Pulse high for at least 10us
-
-  digitalWrite(trigPin, LOW); //End pulse
-}
-
-/**
-   Procedure to receive response from HC SR04 sensor reading and return distance in cm
-   Will return -1 if no obstacle is detected
-*/
-float receiveHCSR04(int echoPin) {
-  unsigned long pulseDuration;
-  unsigned long timeOutDuration;
-
-  timeOutDuration = 36000;
-  pulseDuration = pulseIn(echoPin, HIGH, timeOutDuration);
-
-  if (pulseDuration == 0) { //If echo pulse times out, no obstacle is detected
-    return 400;
-  }
-  else {
-    return pulseDuration / (20000.0 / speedSound); //Return distance otherwise
-  }
-}
-
-/**
    Update left hall effect sensor value, triggered by interrupt
 */
 void updateLeftHE() {
@@ -570,8 +541,6 @@ void updateLeftHE() {
   if (leftRPM > 3) { //Only updates for every third rpm
     double timeChange = millis() - leftLastMillis; //Calculates time change from time since program start
     leftLastMillis = millis(); //Updates the last interupt time
-    //Serial.print("LEFT HE ");
-    //Serial.println(calcTireSpeed(timeChange));
     leftTireSpeed = calcTireSpeed(timeChange); //Calculates tire speed and updates
     leftRPM = 0; //Resets rpms that passed
     updateLCDSpeed((leftTireSpeed + rightTireSpeed) / 2); //Updates the LCD screen
@@ -586,8 +555,6 @@ void updateRightHE() {
   if (rightRPM > 3) { //Only updates for every third rpm
     double timeChange = millis() - rightLastMillis; //Calculates the time change since last interrupt
     rightLastMillis = millis(); //Updates the last interrupt time
-    //Serial.print("RIGHT HE ");
-    //Serial.println(calcTireSpeed(timeChange));
     rightTireSpeed = calcTireSpeed(timeChange); //Updates the tire speed
     rightRPM = 0;
     updateLCDSpeed((leftTireSpeed + rightTireSpeed) / 2); //Updates the LCD speed
@@ -733,7 +700,6 @@ void printLCDSpeed() {
 void LCD_Write(byte value, int RSval) {
   byte dataIn = (value >> 4) & B1111; //Set first half of data
   dataIn += (RSval << 4); //Set RS bit (E bit is implicitly low)
-  //Serial.println(dataIn, BIN);
   updateShiftRegister(dataIn);
   pulseE(dataIn);
   dataIn = (value & B1111); //Send 2nd half of data
