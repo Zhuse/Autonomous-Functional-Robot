@@ -120,8 +120,7 @@ Servo myservo;  // create servo object to control a servo
 SoftwareSerial BT(TX_PIN, RX_PIN);
 
 void setup() {
-  Serial.begin(9600);
-  //BT.begin(9600);
+  BT.begin(9600);
 
   //For distance sensor related pins
   pinMode(LM35_PIN, INPUT);
@@ -194,15 +193,14 @@ void loop() {
 void principleFunction1() {
   float dist = getDist();
   while (dist > 10) {
-    Serial.println(dist);
     if (dist > 50) {
-      setForwardSpeed(MAX_SPEED);
+      setForwardSpeed(255);
     }
     else if (dist > 25) {
-      setForwardSpeed(MAX_SPEED / 2);
+      setForwardSpeed(125);
     }
     else {
-      setForwardSpeed(MAX_SPEED / 5);
+      setForwardSpeed(50);
     }
     dist = getDist();
   }
@@ -216,15 +214,13 @@ void principleFunction1() {
   myservo.write(90); //Reset position
 
   if (leftDist > rightDist) {
-    Serial.println("LEFT IS CLEAR");
     stationaryLeftTurn();
-    delay(300);
+    delay(500);
     //Turn left 90 degrees
   }
   else {
-    Serial.println("RIGHT IS CLEAR");
     stationaryRightTurn();
-    delay(330);
+    delay(530);
     //Turn right 90 degrees
   }
   stopRobot();
@@ -424,7 +420,7 @@ void setForwardSpeed(int speed) {
   currSpeed = speed; //Set member var to speed with sign
   speed = abs(speed);
   analogWrite(MOTOR_POWER_PIN_LEFT, speed);
-  analogWrite(MOTOR_POWER_PIN_RIGHT, speed - 4);
+  analogWrite(MOTOR_POWER_PIN_RIGHT, speed - 5);
 }
 
 /*
