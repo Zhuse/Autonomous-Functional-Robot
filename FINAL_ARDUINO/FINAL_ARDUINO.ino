@@ -120,8 +120,6 @@ Servo myservo;  // create servo object to control a servo
 SoftwareSerial BT(TX_PIN, RX_PIN);
 
 void setup() {
-  Serial.begin(9600);
-  //BT.begin(9600);
 
   //For distance sensor related pins
   pinMode(LM35_PIN, INPUT);
@@ -162,6 +160,13 @@ void setup() {
 
   //LCD initialization procedure
   initializeLCD();
+
+  //Setup serial ports depending on the mode
+  if(digitalRead(DIP_PIN1) && digitalRead(DIP_PIN2)){
+    BT.begin(9600);
+  } else {
+    Serial.begin(9600);
+  }
 }
 
 void loop() {
